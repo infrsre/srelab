@@ -13,7 +13,7 @@
 
   /* backgrounds */
   --ifm-background-color: #ffffff;
-  --ifm-background-surface-color: #faf9ff;
+  --ifm-background-surface-color: #ffffff;
 
   /* typography */
   --ifm-font-family-base: 'Inter', system-ui, -apple-system, sans-serif;
@@ -56,7 +56,7 @@
   /* table */
   --ifm-table-border-color: #ede9fe;
   --ifm-table-head-background: #f5f3ff;
-  --ifm-table-stripe-background: #faf9ff;
+  --ifm-table-stripe-background: #fafafa;
 
   /* toc */
   --ifm-toc-border-color: #ede9fe;
@@ -288,7 +288,7 @@ code {
 }
 
 .markdown table tbody tr:hover {
-  background: #faf9ff;
+  background: #fafafa;
   transition: background 0.15s ease;
 }
 
@@ -402,4 +402,541 @@ code {
 
 .docItemContainer_Djhp {
   animation: fadeUp 0.3s ease;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Intro page components
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Hero ────────────────────────────────────────────────────────── */
+.kiro-hero {
+  background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 55%, #e9d5ff 100%);
+  border: 1px solid #ddd6fe;
+  border-radius: 16px;
+  padding: 2.75rem 2.5rem 2.5rem;
+  margin: -0.5rem 0 2.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.kiro-hero::after {
+  content: '';
+  position: absolute;
+  top: -60px;
+  right: -60px;
+  width: 280px;
+  height: 280px;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.14) 0%, transparent 68%);
+  pointer-events: none;
+}
+
+[data-theme='dark'] .kiro-hero {
+  background: linear-gradient(135deg, #1e1b4b 0%, #2d2a5e 55%, #3d3a7e 100%);
+  border-color: #3d3a7e;
+}
+
+.kiro-badge {
+  display: inline-block;
+  background: #7c3aed;
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  padding: 0.28rem 0.85rem;
+  border-radius: 999px;
+  margin-bottom: 1.1rem;
+}
+
+.kiro-hero__title {
+  font-size: 2.3rem !important;
+  font-weight: 800 !important;
+  line-height: 1.15 !important;
+  color: #2e1065 !important;
+  margin-bottom: 1rem !important;
+  /* override the default gradient h1 */
+  background: none !important;
+  -webkit-text-fill-color: unset !important;
+}
+
+[data-theme='dark'] .kiro-hero__title {
+  color: #f5f3ff !important;
+  -webkit-text-fill-color: unset !important;
+}
+
+.kiro-hero__brand {
+  background: linear-gradient(135deg, #7c3aed, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.kiro-hero__sub {
+  font-size: 1.05rem;
+  color: #4b5563;
+  line-height: 1.7;
+  max-width: 580px;
+  margin-bottom: 1.75rem;
+}
+
+[data-theme='dark'] .kiro-hero__sub {
+  color: #c4b5fd;
+}
+
+.kiro-hero__cta {
+  display: flex;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+}
+
+.kiro-cta-primary {
+  display: inline-block;
+  background: #7c3aed;
+  color: #fff !important;
+  font-weight: 700;
+  font-size: 0.95rem;
+  padding: 0.7rem 1.45rem;
+  border-radius: 10px;
+  text-decoration: none !important;
+  transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+  box-shadow: 0 4px 16px rgba(124, 58, 237, 0.32);
+}
+
+.kiro-cta-primary:hover {
+  background: #6d28d9;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(124, 58, 237, 0.4);
+}
+
+.kiro-cta-ghost {
+  display: inline-block;
+  background: transparent;
+  color: #7c3aed !important;
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 0.7rem 1.45rem;
+  border-radius: 10px;
+  border: 1.5px solid #c4b5fd;
+  text-decoration: none !important;
+  transition: all 0.2s ease;
+}
+
+.kiro-cta-ghost:hover {
+  background: rgba(124, 58, 237, 0.06);
+  border-color: #7c3aed;
+}
+
+[data-theme='dark'] .kiro-cta-ghost {
+  color: #c4b5fd !important;
+  border-color: #4c1d95;
+}
+
+[data-theme='dark'] .kiro-cta-ghost:hover {
+  background: #2d2a5e;
+}
+
+/* ── Workflow Steps ──────────────────────────────────────────────── */
+.kiro-flow {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  margin: 1.25rem 0 0;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+}
+
+.kiro-flow-arrow {
+  font-size: 1.6rem;
+  color: #c4b5fd;
+  padding: 0 0.15rem;
+  margin-top: 2rem;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.kiro-flow-step {
+  flex: 1;
+  min-width: 130px;
+  max-width: 170px;
+  padding: 1.1rem 0.9rem 1rem;
+  border: 1.5px solid #ede9fe;
+  border-radius: 12px;
+  background: #fff;
+  text-align: center;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.05);
+}
+
+.kiro-flow-step:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(124, 58, 237, 0.11);
+}
+
+.kiro-flow-step--active {
+  background: linear-gradient(150deg, #7c3aed 0%, #4c1d95 100%);
+  border-color: transparent;
+  box-shadow: 0 6px 24px rgba(124, 58, 237, 0.35);
+}
+
+.kiro-flow-step--active:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(124, 58, 237, 0.45);
+}
+
+[data-theme='dark'] .kiro-flow-step {
+  background: #1a1830;
+  border-color: #2d2a5e;
+}
+
+.kiro-flow-step__icon {
+  width: 42px;
+  height: 42px;
+  margin: 0 auto 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f3ff;
+  border-radius: 10px;
+  color: #7c3aed;
+}
+
+.kiro-flow-step--active .kiro-flow-step__icon {
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+}
+
+[data-theme='dark'] .kiro-flow-step__icon {
+  background: #2d2a5e;
+}
+
+.kiro-flow-step__num {
+  font-size: 0.67rem;
+  font-weight: 700;
+  color: #a78bfa;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.25rem;
+}
+
+.kiro-flow-step--active .kiro-flow-step__num {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.kiro-flow-step strong {
+  display: block;
+  font-size: 0.875rem;
+  color: #3b0764;
+  margin-bottom: 0.35rem;
+}
+
+[data-theme='dark'] .kiro-flow-step strong {
+  color: #e9d5ff;
+}
+
+.kiro-flow-step--active strong {
+  color: #fff !important;
+}
+
+.kiro-flow-step p {
+  font-size: 0.76rem;
+  color: #6b7280;
+  line-height: 1.45;
+  margin: 0;
+}
+
+[data-theme='dark'] .kiro-flow-step p {
+  color: #a78bfa;
+}
+
+.kiro-flow-step--active p {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.kiro-flow-step code {
+  font-size: 0.68rem;
+  background: rgba(124, 58, 237, 0.1);
+  border-color: transparent;
+}
+
+.kiro-flow-step--active code {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  border-color: transparent;
+}
+
+/* ── Info chips ──────────────────────────────────────────────────── */
+.kiro-chips-row {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin: 1rem 0 0.5rem;
+}
+
+.kiro-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: #f5f3ff;
+  border: 1px solid #ddd6fe;
+  color: #5b21b6;
+  font-size: 0.81rem;
+  font-weight: 600;
+  padding: 0.32rem 0.8rem;
+  border-radius: 999px;
+}
+
+[data-theme='dark'] .kiro-chip {
+  background: #1e1b4b;
+  border-color: #3d3a7e;
+  color: #c4b5fd;
+}
+
+/* ── Pillar cards ────────────────────────────────────────────────── */
+.kiro-pillars {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 1.25rem 0 0.5rem;
+}
+
+.kiro-pillar {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  padding: 1.1rem 1.4rem;
+  border: 1.5px solid #ede9fe;
+  border-radius: 14px;
+  background: #fff;
+  text-decoration: none !important;
+  color: inherit !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.04);
+}
+
+.kiro-pillar:hover {
+  border-color: #a78bfa;
+  box-shadow: 0 6px 24px rgba(124, 58, 237, 0.1);
+  transform: translateX(3px);
+}
+
+[data-theme='dark'] .kiro-pillar {
+  background: #1a1830;
+  border-color: #2d2a5e;
+}
+
+[data-theme='dark'] .kiro-pillar:hover {
+  border-color: #7c3aed;
+  box-shadow: 0 6px 24px rgba(124, 58, 237, 0.2);
+}
+
+.kiro-pillar__icon {
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f3ff;
+  border-radius: 12px;
+  color: #7c3aed;
+  flex-shrink: 0;
+  transition: background 0.2s ease;
+}
+
+.kiro-pillar:hover .kiro-pillar__icon {
+  background: #ede9fe;
+}
+
+[data-theme='dark'] .kiro-pillar__icon {
+  background: #2d2a5e;
+  color: #a78bfa;
+}
+
+[data-theme='dark'] .kiro-pillar:hover .kiro-pillar__icon {
+  background: #3d3a7e;
+}
+
+.kiro-pillar__content {
+  flex: 1;
+}
+
+.kiro-pillar__title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #3b0764;
+  margin-bottom: 0.2rem;
+}
+
+[data-theme='dark'] .kiro-pillar__title {
+  color: #e9d5ff;
+}
+
+.kiro-pillar__desc {
+  font-size: 0.86rem;
+  color: #6b7280;
+  line-height: 1.5;
+}
+
+[data-theme='dark'] .kiro-pillar__desc {
+  color: #a78bfa;
+}
+
+.kiro-pillar__arrow {
+  font-size: 1.4rem;
+  color: #ddd6fe;
+  line-height: 1;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.kiro-pillar:hover .kiro-pillar__arrow {
+  transform: translateX(3px);
+  color: #7c3aed;
+}
+
+/* ── Kiro vs Chat AI comparison ──────────────────────────────────── */
+.kiro-compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin: 1.25rem 0;
+}
+
+@media (max-width: 680px) {
+  .kiro-compare {
+    grid-template-columns: 1fr;
+  }
+}
+
+.kiro-compare__col {
+  padding: 1.25rem 1.3rem;
+  border-radius: 12px;
+  border: 1.5px solid #ede9fe;
+}
+
+.kiro-compare__col--muted {
+  background: #fafafa;
+}
+
+.kiro-compare__col--active {
+  background: linear-gradient(150deg, #f5f3ff, #ede9fe);
+  border-color: #c4b5fd;
+}
+
+[data-theme='dark'] .kiro-compare__col--muted {
+  background: #16141f;
+  border-color: #2d2a5e;
+}
+
+[data-theme='dark'] .kiro-compare__col--active {
+  background: linear-gradient(150deg, #1e1b4b, #2d2a5e);
+  border-color: #4c1d95;
+}
+
+.kiro-compare__label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #9ca3af;
+  margin-bottom: 0.9rem;
+}
+
+.kiro-compare__col--active .kiro-compare__label {
+  color: #7c3aed;
+}
+
+[data-theme='dark'] .kiro-compare__col--active .kiro-compare__label {
+  color: #a78bfa;
+}
+
+.kiro-compare__flow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.9rem;
+}
+
+.kiro-compare__node {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.28rem 0.65rem;
+  color: #374151;
+  white-space: nowrap;
+}
+
+.kiro-compare__col--active .kiro-compare__node {
+  background: #fff;
+  border-color: #ddd6fe;
+  color: #5b21b6;
+}
+
+[data-theme='dark'] .kiro-compare__node {
+  background: #1e1c2e;
+  border-color: #374151;
+  color: #9ca3af;
+}
+
+[data-theme='dark'] .kiro-compare__col--active .kiro-compare__node {
+  background: #2d2a5e;
+  border-color: #4c1d95;
+  color: #c4b5fd;
+}
+
+.kiro-compare__sep {
+  color: #9ca3af;
+  font-size: 1rem;
+}
+
+.kiro-compare__col--active .kiro-compare__sep {
+  color: #a78bfa;
+}
+
+.kiro-compare__note {
+  font-size: 0.82rem;
+  color: #6b7280;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.kiro-compare__col--active .kiro-compare__note {
+  color: #5b21b6;
+}
+
+[data-theme='dark'] .kiro-compare__col--active .kiro-compare__note {
+  color: #a78bfa;
+}
+
+/* ── Responsive flow ─────────────────────────────────────────────── */
+@media (max-width: 860px) {
+  .kiro-flow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .kiro-flow-step {
+    max-width: 100%;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.85rem 1rem;
+  }
+
+  .kiro-flow-step__icon {
+    margin: 0;
+    flex-shrink: 0;
+  }
+
+  .kiro-flow-arrow {
+    margin: 0;
+    padding: 0.1rem 0;
+    transform: rotate(90deg);
+    align-self: center;
+  }
+
+  .kiro-hero__title {
+    font-size: 1.8rem !important;
+  }
 }

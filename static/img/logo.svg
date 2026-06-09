@@ -1,6 +1,66 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
-  <!-- Placeholder logo — replace with your org logo -->
-  <circle cx="24" cy="24" r="22" fill="#e8712a"/>
-  <text x="24" y="30" font-family="monospace" font-size="18" font-weight="bold"
-        text-anchor="middle" fill="white">SRE</text>
+  <defs>
+    <linearGradient id="hex-grad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#8b5cf6"/>
+      <stop offset="60%" stop-color="#7c3aed"/>
+      <stop offset="100%" stop-color="#4c1d95"/>
+    </linearGradient>
+    <linearGradient id="pulse-grad" x1="0" y1="0.5" x2="1" y2="0.5">
+      <stop offset="0%"   stop-color="rgba(255,255,255,0.0)"/>
+      <stop offset="15%"  stop-color="rgba(255,255,255,0.9)"/>
+      <stop offset="85%"  stop-color="rgba(255,255,255,0.9)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0.0)"/>
+    </linearGradient>
+    <filter id="hex-shadow" x="-12%" y="-12%" width="124%" height="124%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="#4c1d95" flood-opacity="0.35"/>
+    </filter>
+    <filter id="pulse-glow" x="-20%" y="-60%" width="140%" height="220%">
+      <feGaussianBlur stdDeviation="0.8" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <clipPath id="hex-clip">
+      <polygon points="24,2 43,12.5 43,35.5 24,46 5,35.5 5,12.5"/>
+    </clipPath>
+  </defs>
+
+  <!-- Main hexagon -->
+  <polygon
+    points="24,2 43,12.5 43,35.5 24,46 5,35.5 5,12.5"
+    fill="url(#hex-grad)"
+    filter="url(#hex-shadow)"
+  />
+
+  <!-- Top highlight edge -->
+  <polygon
+    points="24,2 43,12.5 43,35.5 24,46 5,35.5 5,12.5"
+    fill="none"
+    stroke="rgba(255,255,255,0.18)"
+    stroke-width="1"
+  />
+
+  <!-- Heartbeat / uptime pulse line (clipped to hex) -->
+  <g clip-path="url(#hex-clip)" filter="url(#pulse-glow)">
+    <polyline
+      points="7,21 13,21 15,13.5 17.5,28.5 19.5,15.5 21.5,24 23.5,21 25.5,21 27.5,17 30,26.5 32,21 38,21 41,21"
+      fill="none"
+      stroke="url(#pulse-grad)"
+      stroke-width="1.9"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+  </g>
+
+  <!-- SRE text -->
+  <text
+    x="24" y="39.5"
+    font-family="'Inter','Helvetica Neue',Arial,sans-serif"
+    font-size="9.5"
+    font-weight="800"
+    text-anchor="middle"
+    fill="rgba(255,255,255,0.96)"
+    letter-spacing="2.8"
+  >SRE</text>
 </svg>
