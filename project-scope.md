@@ -73,7 +73,7 @@ A Docusaurus-based documentation site hosted on GitLab Pages, with a GitLab CI/C
 - [x] **Content ownership:** Solo author
 - [x] **Kiro content readiness:** All four topics (Specs, Hooks, Skills, MCP) drafted — see `docs/`
 - [x] **GitLab repo:** Already exists
-- [ ] **Domain / URL:** GitLab Pages default URL or custom internal domain — confirm with team
+- [x] **Domain / URL:** https://sreluger-group.gitlab.io/sreluger-project/ (GitLab Pages default)
 - [x] **Branding:** Minimal — add org logo to Docusaurus, keep default theme
 
 ## Milestones

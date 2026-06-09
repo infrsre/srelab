@@ -6,8 +6,8 @@ const config = {
   tagline: 'Practical AI-assisted SRE with Kiro',
   favicon: 'img/favicon.ico',
 
-  url: 'https://sreluger.gitlab.io',
-  baseUrl: '/sre-kiro-guide/',
+  url: 'https://sreluger-group.gitlab.io',
+  baseUrl: '/sreluger-project/',
 
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',

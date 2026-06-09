@@ -46,15 +46,15 @@ Local dev server runs, build is error-free, all 7 pages are reachable.
 Get the site live on GitLab Pages via the automated pipeline.
 
 ### Tasks
-- [ ] Confirm GitLab repo name and namespace (needed for `baseUrl` in `docusaurus.config.js`)
-- [ ] Update `docusaurus.config.js` — set real `url` and `baseUrl` to match GitLab Pages URL
-- [ ] Initialize git in `d:\launchpad\` (if not already done) and add GitLab remote
-- [ ] Commit all files and push to `main`
+- [x] Confirm GitLab repo name and namespace — `sreluger/sre-kiro-guide`
+- [x] Update `docusaurus.config.js` — url: `https://sreluger.gitlab.io`, baseUrl: `/sre-kiro-guide/`
+- [x] Initialize git and add GitLab remote — `git@gitlab.com:sreluger/sre-kiro-guide.git`
+- [x] Commit all files and push to `main`
 - [ ] Verify pipeline triggers in GitLab CI/CD → Pipelines
 - [ ] Confirm pipeline passes all 3 stages: install → build → pages deploy
-- [ ] Open the live GitLab Pages URL and confirm the site loads
+- [ ] Open the live GitLab Pages URL and confirm the site loads — https://sreluger-group.gitlab.io/sreluger-project/
 - [ ] Test: push a small content change → confirm pipeline auto-deploys within ~2 minutes
-- [ ] Record the live URL in `project-scope.md` (resolve the last open question)
+- [x] Record the live URL in `project-scope.md` (resolved)
 
 ### Pipeline Stages Reminder
 ```

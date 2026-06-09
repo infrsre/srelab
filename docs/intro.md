@@ -58,6 +58,7 @@ If you are comparing Kiro to Claude Code or other AI coding tools, see the [Kiro
 ## Prerequisites
 
 - Kiro installed ([download from kiro.dev](https://kiro.dev))
+- This guide is hosted at [sreluger-group.gitlab.io/sreluger-project](https://sreluger-group.gitlab.io/sreluger-project/)
 - A project repository open in Kiro (any language)
 - Basic familiarity with your team's infrastructure stack (AWS, Kubernetes, Terraform, etc.)
 
