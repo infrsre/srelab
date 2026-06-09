@@ -6,10 +6,7 @@ const config = {
   tagline: 'Practical AI-assisted SRE with Kiro',
   favicon: 'img/favicon.ico',
 
-  // TODO: replace with your GitLab Pages URL once the repo pipeline is confirmed
-  // Format: https://<namespace>.gitlab.io
-  url: 'https://your-namespace.gitlab.io',
-  // Format: /<project-name>/  — must match your GitLab repo path
+  url: 'https://sreluger.gitlab.io',
   baseUrl: '/sre-kiro-guide/',
 
   onBrokenLinks: 'throw',
