@@ -6,8 +6,9 @@ const config = {
   tagline: 'Practical AI-assisted SRE with Kiro',
   favicon: 'img/favicon.ico',
 
-  url: 'https://sreluger-group.gitlab.io',
-  baseUrl: '/sreluger-project/',
+  url: process.env.SITE_URL || 'https://sreluger-group.gitlab.io',
+  // DOCUSAURUS_BASE_URL=/ for AWS/Docker; default keeps GitLab Pages working
+  baseUrl: process.env.DOCUSAURUS_BASE_URL || '/sreluger-project/',
 
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',

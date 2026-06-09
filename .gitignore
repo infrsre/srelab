@@ -15,3 +15,10 @@ Thumbs.db
 .kiro/settings.json
 .env
 .env.local
+
+# Terraform state and provider cache
+*.tfstate
+*.tfstate.backup
+.terraform/
+.terraform.lock.hcl
+terraform.tfvars

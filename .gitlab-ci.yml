@@ -1,41 +1,170 @@
-image: node:20-alpine
+# ── Kiro SRE Guide — CI/CD Pipeline ───────────────────────────────────────────
+#
+# Stages
+#   build   npm ci + docusaurus build (two variants: GitLab Pages and AWS)
+#   docker  build nginx image, push to AWS ECR
+#   deploy  S3 + CloudFront (AWS)  AND  GitLab Pages (free fallback)
+#
+# Required GitLab CI/CD Variables  (Settings → CI/CD → Variables)
+#   AWS_ACCESS_KEY_ID        IAM user access key          [masked]
+#   AWS_SECRET_ACCESS_KEY    IAM user secret key          [masked]
+#   AWS_ACCOUNT_ID           12-digit AWS account ID      [masked]
+#   AWS_REGION               e.g. us-east-1               (or leave default below)
+#   AWS_S3_BUCKET            S3 bucket name               (from: terraform output s3_bucket_name)
+#   AWS_CF_DISTRIBUTION_ID   CloudFront distribution ID   (from: terraform output cloudfront_distribution_id)
+#
+# To provision infrastructure:
+#   cd infra && terraform init && terraform apply
 
 stages:
   - build
+  - docker
   - deploy
 
 variables:
   npm_config_cache: "$CI_PROJECT_DIR/.npm"
+  AWS_REGION:         "us-east-1"
+  ECR_REGISTRY:       "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
+  ECR_REPO:           "kiro-sre-guide"
+  DOCKER_TLS_CERTDIR: "/certs"
 
+# ── Node module cache ──────────────────────────────────────────────────────────
 cache:
   key: "$CI_COMMIT_REF_SLUG"
   paths:
     - .npm/
     - node_modules/
 
-# ── Build ──────────────────────────────────────────────────────────────────────
-build:
+# ══════════════════════════════════════════════════════════════════════════════
+# STAGE 1 — Build (two variants so artifacts use the correct baseUrl)
+# ══════════════════════════════════════════════════════════════════════════════
+
+# Build for GitLab Pages (baseUrl = /sreluger-project/)
+build:gitlab:
   stage: build
+  image: node:20-alpine
+  variables:
+    DOCUSAURUS_BASE_URL: "/sreluger-project/"
+    SITE_URL: "https://sreluger-group.gitlab.io"
   script:
-    - npm ci
+    - npm ci --prefer-offline
     - npm run build
   artifacts:
+    name: "build-gitlab-$CI_COMMIT_SHORT_SHA"
     paths:
       - build/
-    expire_in: 1 hour
+    expire_in: 2 hours
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
-    - if: $CI_MERGE_REQUEST_ID         # also build on MR to catch broken docs
+    - if: $CI_MERGE_REQUEST_ID
 
-# ── Deploy to GitLab Pages ─────────────────────────────────────────────────────
+# Build for AWS (baseUrl = / — served at CloudFront root domain)
+build:aws:
+  stage: build
+  image: node:20-alpine
+  variables:
+    DOCUSAURUS_BASE_URL: "/"
+    SITE_URL: "https://$AWS_CF_DISTRIBUTION_ID.cloudfront.net"
+  script:
+    - npm ci --prefer-offline
+    - npm run build
+  artifacts:
+    name: "build-aws-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - build/
+    expire_in: 2 hours
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+
+# ══════════════════════════════════════════════════════════════════════════════
+# STAGE 2 — Docker → ECR
+# ══════════════════════════════════════════════════════════════════════════════
+
+docker:push:
+  stage: docker
+  image: docker:27-cli
+  services:
+    - name: docker:27-dind
+      alias: docker
+  needs:
+    - job: build:aws
+      artifacts: false  # Docker builds from source via multi-stage Dockerfile
+  before_script:
+    - apk add --no-cache aws-cli
+    - aws ecr get-login-password --region "$AWS_REGION" |
+        docker login --username AWS --password-stdin "$ECR_REGISTRY"
+  script:
+    - |
+      docker build \
+        --build-arg DOCUSAURUS_BASE_URL=/ \
+        --cache-from "$ECR_REGISTRY/$ECR_REPO:latest" \
+        -t "$ECR_REGISTRY/$ECR_REPO:$CI_COMMIT_SHA" \
+        -t "$ECR_REGISTRY/$ECR_REPO:latest" \
+        .
+    - docker push "$ECR_REGISTRY/$ECR_REPO:$CI_COMMIT_SHA"
+    - docker push "$ECR_REGISTRY/$ECR_REPO:latest"
+    - echo "Image pushed → $ECR_REGISTRY/$ECR_REPO:$CI_COMMIT_SHA"
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: on_success
+
+# ══════════════════════════════════════════════════════════════════════════════
+# STAGE 3 — Deploy
+# ══════════════════════════════════════════════════════════════════════════════
+
+# ── AWS S3 + CloudFront ────────────────────────────────────────────────────────
+deploy:aws:
+  stage: deploy
+  image: amazon/aws-cli:2.15.0
+  needs:
+    - job: build:aws
+      artifacts: true
+  script:
+    # Hashed JS/CSS/font assets → long-lived immutable cache
+    - |
+      aws s3 sync build/ "s3://$AWS_S3_BUCKET/" \
+        --delete \
+        --exclude "*.html" \
+        --exclude "sitemap*" \
+        --exclude "*.xml" \
+        --cache-control "max-age=31536000,public,immutable" \
+        --region "$AWS_REGION"
+    # HTML + sitemaps → always revalidate
+    - |
+      aws s3 sync build/ "s3://$AWS_S3_BUCKET/" \
+        --exclude "*" \
+        --include "*.html" \
+        --include "sitemap*" \
+        --include "*.xml" \
+        --cache-control "no-cache,no-store,must-revalidate" \
+        --region "$AWS_REGION"
+    # Bust CloudFront edge caches
+    - |
+      aws cloudfront create-invalidation \
+        --distribution-id "$AWS_CF_DISTRIBUTION_ID" \
+        --paths "/*"
+    - echo "Deployed → https://$AWS_CF_DISTRIBUTION_ID.cloudfront.net"
+  environment:
+    name: production/aws
+    url: "https://$AWS_CF_DISTRIBUTION_ID.cloudfront.net"
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: on_success
+
+# ── GitLab Pages (free CDN — kept as fallback) ────────────────────────────────
 pages:
   stage: deploy
-  dependencies:
-    - build
+  needs:
+    - job: build:gitlab
+      artifacts: true
   script:
     - mv build public
   artifacts:
     paths:
       - public
+  environment:
+    name: production/gitlab-pages
+    url: "https://sreluger-group.gitlab.io/sreluger-project/"
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
+      when: on_success
