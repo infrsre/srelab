@@ -86,7 +86,7 @@ const config = {
         additionalLanguages: ['bash', 'yaml', 'hcl', 'python', 'json'],
       },
       colorMode: {
-        defaultMode: 'dark',
+        defaultMode: 'light',
         disableSwitch: false,
         respectPrefersColorScheme: true,
       },
