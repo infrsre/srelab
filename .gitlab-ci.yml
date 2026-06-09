@@ -1,0 +1,41 @@
+image: node:20-alpine
+
+stages:
+  - build
+  - deploy
+
+variables:
+  npm_config_cache: "$CI_PROJECT_DIR/.npm"
+
+cache:
+  key: "$CI_COMMIT_REF_SLUG"
+  paths:
+    - .npm/
+    - node_modules/
+
+# ── Build ──────────────────────────────────────────────────────────────────────
+build:
+  stage: build
+  script:
+    - npm ci
+    - npm run build
+  artifacts:
+    paths:
+      - build/
+    expire_in: 1 hour
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_MERGE_REQUEST_ID         # also build on MR to catch broken docs
+
+# ── Deploy to GitLab Pages ─────────────────────────────────────────────────────
+pages:
+  stage: deploy
+  dependencies:
+    - build
+  script:
+    - mv build public
+  artifacts:
+    paths:
+      - public
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"

@@ -1,0 +1,17 @@
+# Docusaurus
+.docusaurus/
+build/
+node_modules/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# Local env — never commit tokens or machine-specific paths
+.kiro/settings.json
+.env
+.env.local

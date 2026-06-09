@@ -1,0 +1,28 @@
+/* SRE Kiro Guide — theme overrides */
+
+:root {
+  --ifm-color-primary: #e8712a;          /* warm orange — visible on light */
+  --ifm-color-primary-dark: #d4611a;
+  --ifm-color-primary-darker: #c75a17;
+  --ifm-color-primary-darkest: #a44912;
+  --ifm-color-primary-light: #eb8144;
+  --ifm-color-primary-lighter: #ed8d55;
+  --ifm-color-primary-lightest: #f2a97e;
+  --ifm-code-font-size: 92%;
+}
+
+[data-theme='dark'] {
+  --ifm-color-primary: #f0924f;          /* brighter orange on dark bg */
+  --ifm-color-primary-dark: #ec7e36;
+  --ifm-color-primary-darker: #e97529;
+  --ifm-color-primary-darkest: #c75f1a;
+  --ifm-color-primary-light: #f4a668;
+  --ifm-color-primary-lighter: #f6b07b;
+  --ifm-color-primary-lightest: #fac8a2;
+}
+
+/* tighten table spacing in docs */
+.markdown table td,
+.markdown table th {
+  padding: 0.5rem 0.75rem;
+}
