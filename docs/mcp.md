@@ -7,6 +7,32 @@ sidebar_position: 5
 
 # MCP — Model Context Protocol
 
+<div className="page-intro">
+  <div className="page-intro__icon">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="12" cy="5" r="3" stroke="currentColor" strokeWidth="2"/>
+      <circle cx="5" cy="19" r="3" stroke="currentColor" strokeWidth="2"/>
+      <circle cx="19" cy="19" r="3" stroke="currentColor" strokeWidth="2"/>
+      <line x1="12" y1="8" x2="5" y2="16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+      <line x1="12" y1="8" x2="19" y2="16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+    </svg>
+  </div>
+  <div>
+    <p className="page-intro__desc">
+      MCP (Model Context Protocol) is an open standard that connects Kiro to live external systems —
+      AWS, Kubernetes, PagerDuty, GitHub, and more. Instead of copy-pasting CLI output, Kiro queries
+      your real infrastructure directly from within a spec or chat.
+    </p>
+    <div className="page-intro__tags">
+      <span className="pi-tag">.kiro/settings.json</span>
+      <span className="pi-tag">AWS</span>
+      <span className="pi-tag">Kubernetes</span>
+      <span className="pi-tag">PagerDuty</span>
+      <span className="pi-tag">GitHub</span>
+    </div>
+  </div>
+</div>
+
 ## What is MCP?
 
 **MCP (Model Context Protocol)** is an open standard that lets AI agents connect to external tools, APIs, and data sources. In Kiro, MCP servers extend what the agent can do — instead of just reading your local files, it can query live infrastructure, pull metrics, read tickets, and take actions in external systems.
@@ -54,6 +80,62 @@ MCP servers are configured in `.kiro/settings.json`:
 After saving, restart Kiro. Open the MCP panel (`Cmd/Ctrl + Shift + M`) to verify the server connected and see available tools.
 
 ## SRE-Relevant MCP Servers
+
+<div className="mcp-quick-grid">
+  <div className="mcp-quick-card">
+    <div className="mcp-quick-card__icon">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
+        <polyline points="9,22 9,12 15,12 15,22" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
+      </svg>
+    </div>
+    <div className="mcp-quick-card__name">AWS</div>
+    <div className="mcp-quick-card__cap">CloudWatch, EC2, ECS, RDS, S3, Lambda</div>
+  </div>
+  <div className="mcp-quick-card">
+    <div className="mcp-quick-card__icon">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+        <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="2"/>
+        <line x1="12" y1="2" x2="12" y2="8" stroke="currentColor" strokeWidth="2"/>
+        <line x1="12" y1="16" x2="12" y2="22" stroke="currentColor" strokeWidth="2"/>
+        <line x1="2" y1="12" x2="8" y2="12" stroke="currentColor" strokeWidth="2"/>
+        <line x1="16" y1="12" x2="22" y2="12" stroke="currentColor" strokeWidth="2"/>
+      </svg>
+    </div>
+    <div className="mcp-quick-card__name">Kubernetes</div>
+    <div className="mcp-quick-card__cap">Pods, deployments, logs, HPA, nodes</div>
+  </div>
+  <div className="mcp-quick-card">
+    <div className="mcp-quick-card__icon">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M13.73 21a2 2 0 01-3.46 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+      </svg>
+    </div>
+    <div className="mcp-quick-card__name">PagerDuty</div>
+    <div className="mcp-quick-card__cap">Incidents, on-call schedules, services</div>
+  </div>
+  <div className="mcp-quick-card">
+    <div className="mcp-quick-card__icon">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0020 4.77 5.07 5.07 0 0019.91 1S18.73.65 16 2.48a13.38 13.38 0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 005 4.77a5.44 5.44 0 00-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 009 18.13V22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    </div>
+    <div className="mcp-quick-card__name">GitHub / GitLab</div>
+    <div className="mcp-quick-card__cap">PRs, pipelines, issues, code search</div>
+  </div>
+  <div className="mcp-quick-card">
+    <div className="mcp-quick-card__icon">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
+        <polyline points="13,2 13,9 20,9" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
+      </svg>
+    </div>
+    <div className="mcp-quick-card__name">Filesystem</div>
+    <div className="mcp-quick-card__cap">External runbooks, shared config repos</div>
+  </div>
+</div>
 
 ### AWS MCP Server
 

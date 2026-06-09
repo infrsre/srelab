@@ -7,6 +7,29 @@ sidebar_position: 2
 
 # Kiro Specs
 
+<div className="page-intro">
+  <div className="page-intro__icon">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="4" y="2" width="14" height="18" rx="2" stroke="currentColor" strokeWidth="2"/>
+      <line x1="8" y1="8" x2="14" y2="8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+      <line x1="8" y1="12" x2="14" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+      <line x1="8" y1="16" x2="11" y2="16" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+    </svg>
+  </div>
+  <div>
+    <p className="page-intro__desc">
+      Specs are Kiro's structured planning layer — Markdown documents in <code>.kiro/specs/</code> that
+      describe what to build. Kiro reads your spec, generates a task plan, and executes it with full diff review at every step.
+    </p>
+    <div className="page-intro__tags">
+      <span className="pi-tag">.kiro/specs/</span>
+      <span className="pi-tag">Requirements</span>
+      <span className="pi-tag">Design</span>
+      <span className="pi-tag">Tasks</span>
+    </div>
+  </div>
+</div>
+
 ## What is a Spec?
 
 A **spec** is a structured document you write in Kiro that describes what you want built or automated. Kiro reads the spec, generates a plan, and executes tasks — creating files, writing code, and updating configs on your behalf.
@@ -18,6 +41,24 @@ Specs live in your project under `.kiro/specs/` and are written in Markdown.
 ## Spec Structure
 
 Every spec has three sections:
+
+<div className="spec-anatomy">
+  <div className="spec-part spec-part--req">
+    <div className="spec-part__num">01 — REQUIREMENTS</div>
+    <strong>Requirements</strong>
+    <p>What this spec must accomplish. Written as user stories or acceptance criteria. This is the <em>why</em>.</p>
+  </div>
+  <div className="spec-part spec-part--design">
+    <div className="spec-part__num">02 — DESIGN</div>
+    <strong>Design</strong>
+    <p>How it should be built. Architecture decisions, file layout, constraints. This is the <em>how</em>.</p>
+  </div>
+  <div className="spec-part spec-part--tasks">
+    <div className="spec-part__num">03 — TASKS</div>
+    <strong>Tasks</strong>
+    <p>The ordered list of things Kiro will execute. One file or change per task. This is the <em>what</em>.</p>
+  </div>
+</div>
 
 ```markdown
 ## Requirements

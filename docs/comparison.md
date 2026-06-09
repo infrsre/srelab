@@ -7,6 +7,29 @@ sidebar_position: 6
 
 # Kiro vs Claude Code
 
+<div className="page-intro">
+  <div className="page-intro__icon">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <line x1="12" y1="2" x2="12" y2="22" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+      <polyline points="4,6 12,2 20,6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <polyline points="4,18 12,22 20,18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <line x1="4" y1="6" x2="4" y2="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+      <line x1="20" y1="6" x2="20" y2="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+    </svg>
+  </div>
+  <div>
+    <p className="page-intro__desc">
+      Kiro and Claude Code are both AI-powered tools built on large language models, but they suit different
+      workflows. Kiro excels at spec-driven, multi-file project work with persistent team context.
+      Claude Code excels at fast, conversational, terminal-native tasks.
+    </p>
+    <div className="page-intro__tags">
+      <span className="pi-tag">Kiro — IDE + specs + hooks</span>
+      <span className="pi-tag">Claude Code — terminal + conversational</span>
+    </div>
+  </div>
+</div>
+
 Both Kiro and Claude Code are AI-powered development tools built on large language models. They overlap significantly — but they are designed for different workflows, and choosing the wrong one for a task creates unnecessary friction.
 
 ## Quick Reference
@@ -82,7 +105,11 @@ CPU exceeds 90% for 5 minutes. Include the IAM role Terraform."
 ```
 Review output in terminal, copy files manually.
 
-**Verdict:** Kiro wins for multi-file, structured output. Claude Code wins for speed on small, self-contained tasks.
+<div className="verdict-row">
+  <span className="verdict-label">Verdict</span>
+  <span className="verdict-badge verdict-badge--kiro">Kiro — multi-file structured output</span>
+  <span className="verdict-badge verdict-badge--cc">Claude Code — fast, self-contained tasks</span>
+</div>
 
 ---
 
@@ -98,7 +125,10 @@ aws cloudwatch get-metric-statistics [...] | claude "Analyze this —
 what's causing the spike?"
 ```
 
-**Verdict:** Comparable. Kiro is more integrated (no copy-pasting CLI output). Claude Code is faster to reach from a terminal.
+<div className="verdict-row">
+  <span className="verdict-label">Verdict</span>
+  <span className="verdict-badge verdict-badge--either">Either — Kiro is more integrated, Claude Code is faster to reach</span>
+</div>
 
 ---
 
@@ -111,7 +141,10 @@ what's causing the spike?"
 claude < modules/alb-waf/main.tf
 ```
 
-**Verdict:** Both work well. Claude Code handles large files via stdin easily. Kiro is better if you want to ask follow-up questions while navigating the file.
+<div className="verdict-row">
+  <span className="verdict-label">Verdict</span>
+  <span className="verdict-badge verdict-badge--either">Either — Claude Code via stdin, Kiro for IDE follow-up questions</span>
+</div>
 
 ---
 

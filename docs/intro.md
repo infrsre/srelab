@@ -3,6 +3,7 @@ id: intro
 title: Introduction to Kiro for SRE
 sidebar_label: Introduction
 sidebar_position: 1
+slug: /
 ---
 
 <div className="kiro-hero">

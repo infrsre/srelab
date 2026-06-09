@@ -7,6 +7,27 @@ sidebar_position: 3
 
 # Agent Hooks
 
+<div className="page-intro">
+  <div className="page-intro__icon">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="13,2 3,14 12,14 11,22 21,10 12,10" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
+    </svg>
+  </div>
+  <div>
+    <p className="page-intro__desc">
+      Hooks are event-driven triggers that automatically invoke the Kiro agent when something happens in your project —
+      file saves, git commits, spec completions, and more. Define the condition once; Kiro acts on it every time.
+    </p>
+    <div className="page-intro__tags">
+      <span className="pi-tag">.kiro/hooks/</span>
+      <span className="pi-tag">file_save</span>
+      <span className="pi-tag">git_commit</span>
+      <span className="pi-tag">spec_complete</span>
+      <span className="pi-tag">manual</span>
+    </div>
+  </div>
+</div>
+
 ## What are Hooks?
 
 **Hooks** are event-driven triggers that automatically invoke the Kiro agent when something happens in your project. Instead of manually asking Kiro to do something, you define conditions — and Kiro acts on them.
@@ -32,13 +53,28 @@ instruction: |
 
 ## Trigger Types
 
-| Trigger | Fires When |
-|---------|-----------|
-| `file_save` | A file matching a glob pattern is saved |
-| `file_create` | A new file is created |
-| `spec_complete` | A Kiro spec finishes running |
-| `git_commit` | A git commit is made (pre or post) |
-| `manual` | You invoke the hook explicitly from the command palette |
+<div className="trigger-grid">
+  <div className="trigger-item">
+    <span className="trigger-item__badge">file_save</span>
+    <p className="trigger-item__desc">A file matching a glob pattern is saved</p>
+  </div>
+  <div className="trigger-item">
+    <span className="trigger-item__badge">file_create</span>
+    <p className="trigger-item__desc">A new file is created in the project</p>
+  </div>
+  <div className="trigger-item">
+    <span className="trigger-item__badge">spec_complete</span>
+    <p className="trigger-item__desc">A Kiro spec finishes running all its tasks</p>
+  </div>
+  <div className="trigger-item">
+    <span className="trigger-item__badge">git_commit</span>
+    <p className="trigger-item__desc">A git commit is made (pre or post-commit)</p>
+  </div>
+  <div className="trigger-item">
+    <span className="trigger-item__badge">manual</span>
+    <p className="trigger-item__desc">You invoke the hook from the command palette</p>
+  </div>
+</div>
 
 ## SRE Example: Auto-Update Runbook on Alert Config Change
 

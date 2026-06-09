@@ -7,6 +7,29 @@ sidebar_position: 7
 
 # Kiro Best Practices for SRE
 
+<div className="page-intro">
+  <div className="page-intro__icon">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
+      <polyline points="9,12 11,14 15,10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  </div>
+  <div>
+    <p className="page-intro__desc">
+      Lessons learned from running Kiro in SRE workflows. Apply these from day one to avoid the most
+      common pitfalls with specs, hooks, skills, and MCP security.
+    </p>
+    <div className="page-intro__tags">
+      <span className="pi-tag">Setup</span>
+      <span className="pi-tag">Specs</span>
+      <span className="pi-tag">Hooks</span>
+      <span className="pi-tag">Skills</span>
+      <span className="pi-tag">MCP Security</span>
+      <span className="pi-tag">Team Adoption</span>
+    </div>
+  </div>
+</div>
+
 Lessons learned from the SRE POC. Apply these from day one to avoid common pitfalls.
 
 ---

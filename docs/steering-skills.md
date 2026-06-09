@@ -5,7 +5,34 @@ sidebar_label: Steering & Skills
 sidebar_position: 4
 ---
 
-# Agent Steering & Skills
+# Agent Steering &amp; Skills
+
+<div className="page-intro">
+  <div className="page-intro__icon">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+      <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2"/>
+      <line x1="12" y1="2" x2="12" y2="9" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+      <line x1="12" y1="15" x2="12" y2="22" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+      <line x1="2" y1="12" x2="9" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+      <line x1="15" y1="12" x2="22" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+    </svg>
+  </div>
+  <div>
+    <p className="page-intro__desc">
+      <strong>Steering</strong> gives the agent persistent team context applied to every action.
+      <strong> Skills</strong> are reusable slash-command workflows your team invokes on demand.
+      Together they define <em>how</em> Kiro thinks and what shortcuts it knows.
+    </p>
+    <div className="page-intro__tags">
+      <span className="pi-tag">.kiro/steering/</span>
+      <span className="pi-tag">.kiro/skills/</span>
+      <span className="pi-tag">/triage-alert</span>
+      <span className="pi-tag">/postmortem</span>
+      <span className="pi-tag">/iac-review</span>
+    </div>
+  </div>
+</div>
 
 ## Agent Steering
 
