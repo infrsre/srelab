@@ -73,8 +73,8 @@ const config = {
       navbar: {
         title: 'Kiro SRE Guide',
         logo: {
-          alt: 'SRE Team Logo',
-          src: 'img/logo.svg',    // drop your org logo here
+          alt: 'infrsre',
+          src: 'img/logo.svg',
         },
         items: [
           {
