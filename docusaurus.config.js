@@ -6,9 +6,8 @@ const config = {
   tagline: 'Practical AI-assisted SRE with Kiro',
   favicon: 'img/favicon.ico',
 
-  url: process.env.SITE_URL || 'https://sreluger-group.gitlab.io',
-  // DOCUSAURUS_BASE_URL=/ for AWS/Docker; default keeps GitLab Pages working
-  baseUrl: process.env.DOCUSAURUS_BASE_URL || '/sreluger-project/',
+  url: process.env.SITE_URL || 'https://infrsre.github.io',
+  baseUrl: process.env.DOCUSAURUS_BASE_URL || '/',
 
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
@@ -65,6 +64,7 @@ const config = {
             title: 'Guide',
             items: [
               { label: 'Introduction', to: '/' },
+              { label: 'Tutorial: Your First Spec', to: '/tutorial-first-spec' },
               { label: 'Specs', to: '/specs' },
               { label: 'Agent Hooks', to: '/agent-hooks' },
               { label: 'Steering & Skills', to: '/steering-skills' },
