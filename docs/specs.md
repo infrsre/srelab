@@ -136,14 +136,14 @@ Kiro uses the **Requirements** and **Design** sections to understand intent, the
 ```markdown
 ## Requirements
 - As an SRE lead, I need a script that reads the PagerDuty on-call schedule and posts
-  the weekly rotation to a Slack channel every Monday at 09:00 UTC.
+  the weekly rotation to a Microsoft Teams channel every Monday at 09:00 UTC.
 - Must handle gaps in the schedule (alert if no one is on call).
 - Must be runnable as a cron job or GitLab scheduled pipeline.
 
 ## Design
 - Language: Python 3.11+
 - PagerDuty API v2 for schedule lookup
-- Slack Incoming Webhook for posting
+- Microsoft Teams Incoming Webhook for posting
 - Config via environment variables: PAGERDUTY_TOKEN, SLACK_WEBHOOK_URL, SCHEDULE_ID
 - Script: `scripts/post_oncall_rotation.py`
 
@@ -152,7 +152,7 @@ Kiro uses the **Requirements** and **Design** sections to understand intent, the
 - [ ] Add `requirements.txt` with pdpyras and requests
 - [ ] Create `.gitlab-ci.yml` scheduled job stanza (weekly, Monday 09:00 UTC)
 - [ ] Add `.env.example` with required variables
-- [ ] Write tests mocking PagerDuty and Slack responses
+- [ ] Write tests mocking PagerDuty and Teams responses
 ```
 
 ## Tips for Writing Effective Specs

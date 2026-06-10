@@ -16,7 +16,7 @@ sidebar_position: 2
   <div>
     <p className="page-intro__desc">
       Build a real automation project from scratch — a Lambda function that receives PagerDuty alerts
-      and posts structured incident messages to Slack, complete with Terraform infrastructure and CI/CD.
+      and posts structured incident messages to Microsoft Teams, complete with Terraform infrastructure and CI/CD.
       Kiro writes every file. You review every diff.
     </p>
     <div className="page-intro__tags">
@@ -33,7 +33,7 @@ sidebar_position: 2
 Every time PagerDuty fires an alert, your on-call engineer manually:
 
 1. Opens PagerDuty to read the alert title and severity
-2. Finds the right Slack channel
+2. Finds the right Teams channel
 3. Writes an incident message by hand
 4. Pastes the runbook link from the wiki
 5. Tags the affected service team
@@ -46,8 +46,8 @@ That's 3–5 minutes of cognitive overhead at 2 AM. Multiply by 40 incidents a m
   <div className="tutorial-outcome__icon">📦</div>
   <div>
     <strong>What you'll build:</strong> A Python AWS Lambda function behind an API Gateway that receives PagerDuty webhooks,
-    formats a rich Slack message with severity badge, service name, on-call engineer, and runbook link,
-    and posts it to <code>#incidents</code> — all deployed via Terraform and a GitHub Actions pipeline.
+    formats a rich Teams message card with severity badge, service name, on-call engineer, and runbook link,
+    and posts it to the <code>incidents</code> Teams channel — all deployed via Terraform and a GitHub Actions pipeline.
   </div>
 </div>
 
@@ -58,7 +58,7 @@ incident-bot/
 ├── src/
 │   ├── handler.py        ← Lambda entry point
 │   ├── pagerduty.py      ← Webhook parser and event models
-│   ├── slack.py          ← Message formatter and Slack API client
+│   ├── teams.py          ← Message formatter and Teams webhook client
 │   └── runbooks.py       ← Runbook URL resolver by service name
 ├── tests/
 │   ├── test_handler.py
@@ -85,7 +85,7 @@ You will write **none of this manually**. You write the spec; Kiro writes the co
 You need:
 - **Kiro installed** — [kiro.dev](https://kiro.dev)
 - **An empty repo** open in Kiro (create `incident-bot/` and open it)
-- **A Slack Incoming Webhook URL** — create one at [api.slack.com/apps](https://api.slack.com/apps) → Incoming Webhooks → Add New Webhook → pick `#incidents`
+- **A Teams Incoming Webhook URL** — in Teams, go to the **incidents** channel → **⋯ → Connectors → Incoming Webhook → Configure** → copy the URL
 - **Basic Python familiarity** — you don't need to write any, but reviewing the diffs will be easier
 
 :::tip No AWS account yet?
@@ -118,13 +118,13 @@ Copy this into the Requirements section of your spec:
 ```markdown
 ## Requirements
 
-- As an on-call SRE, I need PagerDuty alerts automatically posted to Slack
+- As an on-call SRE, I need PagerDuty alerts automatically posted to Microsoft Teams
   so that the whole team is aware of incidents without anyone having to
   manually copy-paste from PagerDuty.
 
-- When a PagerDuty "trigger" event fires, post a message to the #incidents
-  Slack channel containing:
-    - Severity badge (P1/P2/P3/P4 with color coding)
+- When a PagerDuty "trigger" event fires, post a MessageCard to the incidents
+  Teams channel containing:
+    - Severity badge (P1/P2/P3/P4 with color coding via themeColor)
     - Incident title from PagerDuty
     - Affected service name
     - On-call engineer's name
@@ -132,10 +132,10 @@ Copy this into the Requirements section of your spec:
     - Link back to the PagerDuty incident
 
 - When a PagerDuty "resolve" event fires, post a "✅ Resolved" follow-up
-  to the same Slack channel referencing the original incident title.
+  to the same Teams channel referencing the original incident title.
 
 - The bot must be a Python AWS Lambda function triggered by API Gateway.
-- Secrets (Slack webhook URL, PagerDuty signing secret) must come from
+- Secrets (Teams webhook URL, PagerDuty signing secret) must come from
   AWS SSM Parameter Store — never hardcoded.
 - All errors must be logged to CloudWatch and must not crash the Lambda
   (return HTTP 200 to PagerDuty even on soft errors so it stops retrying).
@@ -172,7 +172,7 @@ Add this Design section below Requirements:
 ### Project layout
 - src/handler.py      — Lambda entry: validates signature, routes to trigger/resolve handlers
 - src/pagerduty.py    — Dataclass models for PagerDuty webhook payload, HMAC signature validation
-- src/slack.py        — SlackClient class + message_blocks() builder (use Block Kit, not plain text)
+- src/teams.py        — TeamsClient class + build_card() using Teams MessageCard format
 - src/runbooks.py     — load runbooks.yaml and return URL for a given service name
 - tests/              — pytest, one file per module, fixtures in tests/fixtures/
 - terraform/          — Lambda + API Gateway HTTP API (not REST API), SSM reads via data sources
@@ -180,7 +180,7 @@ Add this Design section below Requirements:
 ### Python details
 - Python 3.12, no framework (plain Lambda handler, no FastAPI/Flask)
 - Use dataclasses for PagerDuty event models
-- Slack Block Kit format: header block (severity + title), section block (service/oncall/runbook), actions block (PagerDuty link button)
+- Teams MessageCard format (@type: MessageCard, themeColor, sections with facts, potentialAction)
 - Severity color map: P1=#FF0000, P2=#FF8C00, P3=#FFC200, P4=#36A64F
 - runbooks.yaml lives at the project root, keyed by service name:
     payments-api: https://wiki.internal/runbooks/payments-api
@@ -223,11 +223,11 @@ Click **Generate Tasks** in the Kiro sidebar. Kiro reads both sections and produ
 - [ ] 2. Create `src/pagerduty.py` — PagerDutyEvent dataclass + validate_signature()
 - [ ] 3. Create `src/runbooks.py` — load_runbooks() from runbooks.yaml
 - [ ] 4. Create `runbooks.yaml` with payments-api and auth-service entries
-- [ ] 5. Create `src/slack.py` — SlackClient class, message_blocks() with Block Kit format
+- [ ] 5. Create `src/teams.py` — TeamsClient class, build_card() with Teams MessageCard format
 - [ ] 6. Create `src/handler.py` — Lambda entry point, route trigger vs resolve events
 - [ ] 7. Create `tests/fixtures/pagerduty_trigger.json` — realistic sample webhook payload
-- [ ] 8. Create `tests/test_handler.py` — test trigger and resolve paths, mock SSM + Slack
-- [ ] 9. Create `tests/test_slack.py` — test Block Kit message structure and severity colors
+- [ ] 8. Create `tests/test_handler.py` — test trigger and resolve paths, mock SSM + Teams
+- [ ] 9. Create `tests/test_teams.py` — test MessageCard structure and severity colors
 - [ ] 10. Create `terraform/variables.tf`
 - [ ] 11. Create `terraform/iam.tf` — Lambda execution role with SSM permissions
 - [ ] 12. Create `terraform/main.tf` — Lambda + API Gateway HTTP API
@@ -315,7 +315,7 @@ When Task 6 completes, Kiro shows you the `handler.py` diff. This is the most im
 + import logging
 + import boto3
 + from pagerduty import PagerDutyEvent, validate_signature
-+ from slack import SlackClient
++ from teams import TeamsClient
 + from runbooks import load_runbooks
 +
 + logger = logging.getLogger()
@@ -330,7 +330,7 @@ When Task 6 completes, Kiro shows you the `handler.py` diff. This is the most im
 +     try:
 +         body = event.get("body", "")
 +         signature = event.get("headers", {}).get("x-pagerduty-signature", "")
-+         pd_secret = _get_param(os.environ["SSM_PD_SECRET_PARAM"])
++         pd_secret  = _get_param(os.environ["SSM_PD_SECRET_PARAM"])
 +
 +         if not validate_signature(body, signature, pd_secret):
 +             logger.warning("Invalid PagerDuty signature — ignoring request")
@@ -338,9 +338,9 @@ When Task 6 completes, Kiro shows you the `handler.py` diff. This is the most im
 +
 +         payload = json.loads(body)
 +         pd_event = PagerDutyEvent.from_webhook(payload)
-+         slack_webhook = _get_param(os.environ["SSM_SLACK_PARAM"])
++         teams_webhook = _get_param(os.environ["SSM_TEAMS_PARAM"])
 +         runbooks = load_runbooks()
-+         client = SlackClient(slack_webhook)
++         client = TeamsClient(teams_webhook)
 +
 +         if pd_event.event_type == "trigger":
 +             runbook_url = runbooks.get(pd_event.service, "https://wiki.internal/runbooks")
@@ -391,12 +391,13 @@ Now review `src/slack.py` — the Block Kit message builder:
     <span className="ide-window__dot ide-window__dot--red"></span>
     <span className="ide-window__dot ide-window__dot--yellow"></span>
     <span className="ide-window__dot ide-window__dot--green"></span>
-    <span className="ide-window__title">Diff — src/slack.py</span>
+    <span className="ide-window__title">Diff — src/teams.py</span>
   </div>
   <div className="ide-window__body ide-window__body--diff">
 
 ```diff
-+ import requests
++ import json
++ import urllib.request
 + from dataclasses import dataclass
 + from pagerduty import PagerDutyEvent
 +
@@ -408,50 +409,57 @@ Now review `src/slack.py` — the Block Kit message builder:
 + }
 +
 + @dataclass
-+ class SlackClient:
++ class TeamsClient:
 +     webhook_url: str
++
++     def _post(self, payload: dict) -> None:
++         data = json.dumps(payload).encode("utf-8")
++         req = urllib.request.Request(
++             self.webhook_url,
++             data=data,
++             headers={"Content-Type": "application/json"},
++         )
++         urllib.request.urlopen(req, timeout=5)
 +
 +     def post_incident(self, event: PagerDutyEvent, runbook_url: str) -> None:
 +         color = SEVERITY_COLORS.get(event.severity, "#CCCCCC")
-+         blocks = [
-+             {
-+                 "type": "header",
-+                 "text": {"type": "plain_text",
-+                          "text": f"🚨 {event.severity} — {event.title}"}
-+             },
-+             {
-+                 "type": "section",
-+                 "fields": [
-+                     {"type": "mrkdwn", "text": f"*Service:*\n{event.service}"},
-+                     {"type": "mrkdwn", "text": f"*On-call:*\n{event.oncall_name}"},
-+                     {"type": "mrkdwn", "text": f"*Runbook:*\n<{runbook_url}|Open runbook>"},
-+                     {"type": "mrkdwn", "text": f"*Incident ID:*\n{event.incident_id}"},
++         payload = {
++             "@type": "MessageCard",
++             "@context": "http://schema.org/extensions",
++             "themeColor": color,
++             "summary": f"{event.severity} — {event.title}",
++             "sections": [{
++                 "activityTitle": f"🚨 **{event.severity}** — {event.title}",
++                 "activitySubtitle": f"Service: **{event.service}**",
++                 "facts": [
++                     {"name": "On-call",     "value": event.oncall_name},
++                     {"name": "Runbook",     "value": f"[Open runbook]({runbook_url})"},
++                     {"name": "Incident ID", "value": event.incident_id},
 +                 ]
-+             },
-+             {
-+                 "type": "actions",
-+                 "elements": [{
-+                     "type": "button",
-+                     "text": {"type": "plain_text", "text": "View in PagerDuty"},
-+                     "url": event.html_url,
-+                     "style": "danger" if event.severity in ("P1", "P2") else "primary"
-+                 }]
-+             }
-+         ]
-+         payload = {"attachments": [{"color": color, "blocks": blocks}]}
-+         requests.post(self.webhook_url, json=payload, timeout=5)
++             }],
++             "potentialAction": [{
++                 "@type": "OpenUri",
++                 "name": "View in PagerDuty",
++                 "targets": [{"os": "default", "uri": event.html_url}]
++             }]
++         }
++         self._post(payload)
 +
 +     def post_resolved(self, event: PagerDutyEvent) -> None:
 +         payload = {
-+             "text": f"✅ *Resolved* — {event.title} (`{event.incident_id}`)"
++             "@type": "MessageCard",
++             "@context": "http://schema.org/extensions",
++             "themeColor": "#36A64F",
++             "summary": f"Resolved — {event.title}",
++             "text": f"✅ **Resolved** — {event.title} (`{event.incident_id}`)",
 +         }
-+         requests.post(self.webhook_url, json=payload, timeout=5)
++         self._post(payload)
 ```
 
   </div>
 </div>
 
-This is production-quality Slack Block Kit code. Accept it.
+This is production-quality Teams MessageCard code using only stdlib (`urllib.request`) — no `requests` dependency needed. Accept it.
 
 ---
 
@@ -486,7 +494,7 @@ After the Python files, Kiro generates the infrastructure. Review `terraform/mai
 +
 +   environment {
 +     variables = {
-+       SSM_SLACK_PARAM    = "/incident-bot/slack-webhook"
++       SSM_TEAMS_PARAM     = "/incident-bot/teams-webhook"
 +       SSM_PD_SECRET_PARAM = "/incident-bot/pd-secret"
 +     }
 +   }
@@ -572,7 +580,7 @@ Without this hook, you'd finish all 14 tasks and then run tests — potentially 
 
 ## Step 9 — Add Steering: Python & AWS Standards
 
-You notice Kiro used `requests` for the Slack HTTP call. Your team policy is to use `urllib3` directly in Lambdas to avoid adding a dependency. Add a steering file so Kiro follows this rule on every future spec.
+You notice Kiro used `requests` for the Teams HTTP call. Your team policy is to use `urllib.request` (stdlib) directly in Lambdas to avoid adding a dependency. Add a steering file so Kiro follows this rule on every future spec.
 
 Create `.kiro/steering/lambda-standards.md`:
 
@@ -590,7 +598,7 @@ Create `.kiro/steering/lambda-standards.md`:
 
 ## HTTP calls
 - Do NOT use the `requests` library in Lambda functions.
-- Use `urllib.request` (stdlib) or `urllib3` for all HTTP calls.
+- Use `urllib.request` (stdlib) for all HTTP calls including Teams webhooks.
 - Reason: avoid adding packages that inflate the deployment zip.
 
 ## Secrets
@@ -617,7 +625,7 @@ Create `.kiro/steering/lambda-standards.md`:
   </div>
 </div>
 
-Now reject `src/slack.py` and click **Re-run Task** with the note: *"Use urllib.request instead of requests library"*. Kiro regenerates `slack.py` using only stdlib — matching your team standard.
+Now reject `src/teams.py` and click **Re-run Task** with the note: *"Use urllib.request instead of requests library"*. Kiro regenerates `teams.py` using only stdlib — matching your team standard.
 
 ---
 
@@ -694,14 +702,14 @@ In PagerDuty:
 3. Events: check **Incident Triggered** and **Incident Resolved**
 4. Save
 
-Trigger a test incident in PagerDuty. Within 3 seconds, `#incidents` in Slack shows:
+Trigger a test incident in PagerDuty. Within 3 seconds, the **incidents** Teams channel shows:
 
 <div className="ide-window">
   <div className="ide-window__bar">
     <span className="ide-window__dot ide-window__dot--red"></span>
     <span className="ide-window__dot ide-window__dot--yellow"></span>
     <span className="ide-window__dot ide-window__dot--green"></span>
-    <span className="ide-window__title">#incidents — Slack</span>
+    <span className="ide-window__title">incidents — Microsoft Teams</span>
   </div>
   <div className="ide-window__body">
     <div className="slack-message">
@@ -767,7 +775,7 @@ Trigger a test incident in PagerDuty. Within 3 seconds, `#incidents` in Slack sh
 
 ## Next Steps
 
-- **Extend this bot** — Add a `snooze` action button in the Slack message that calls back to PagerDuty's API to acknowledge the incident. Write a new spec: `incident-slack-bot-snooze`.
+- **Extend this bot** — Add an `Acknowledge` action button in the Teams card that calls back to PagerDuty's API to acknowledge the incident. Write a new spec: `incident-teams-bot-acknowledge`.
 - **[Agent Hooks →](agent-hooks)** — Explore all hook trigger types and more automation patterns
 - **[Steering & Skills →](steering-skills)** — Turn your Lambda standards into a reusable skill your team can invoke with `/deploy-lambda`
 - **[MCP →](mcp)** — Connect Kiro to live AWS so it can query CloudWatch metrics and paste them directly into incident messages

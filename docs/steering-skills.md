@@ -96,7 +96,7 @@ All runbooks must follow this structure:
 2. Likely causes (ordered by probability based on historical incidents)
 3. Diagnostic commands (copy-paste ready, no placeholders)
 4. Resolution steps
-5. Escalation path with Slack handles
+5. Escalation path with Microsoft Teams handles
 6. Post-incident checklist
 
 ## Communication Templates

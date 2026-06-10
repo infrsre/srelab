@@ -146,12 +146,12 @@ instruction: |
 
 ## SRE Example: Post Incident Summary on Git Commit
 
-When an engineer commits to the `incidents/` directory, post a summary to Slack.
+When an engineer commits to the `incidents/` directory, post a summary to Microsoft Teams.
 
 ```yaml
 # .kiro/hooks/incident-summary-notify.yaml
 name: Notify on Incident Doc Commit
-description: Posts a Slack-ready summary when an incident doc is committed
+description: Posts a Teams-ready summary when an incident doc is committed
 trigger:
   type: git_commit
   paths:
@@ -159,14 +159,14 @@ trigger:
 instruction: |
   A commit was just made that includes changes to: {{changed_files}}
 
-  Read the modified incident document(s) and produce a Slack-formatted summary:
+  Read the modified incident document(s) and produce a Microsoft Teams-formatted summary:
   - Incident title and severity
   - Duration (start/end from the doc)
   - Root cause (one sentence)
   - Action items with owners (bulleted)
 
   Save the summary to incidents/summaries/{{commit_sha}}.md
-  so it can be posted to Slack via the CI pipeline.
+  so it can be posted to Microsoft Teams via the CI pipeline.
 ```
 
 ## SRE Example: Manual Hook — Diagnose High CPU Alert
@@ -185,7 +185,7 @@ instruction: |
   1. List the most likely causes of CPU saturation for a Python web service on EC2.
   2. Provide the exact CloudWatch CLI commands to pull CPU metrics for the last 30 minutes.
   3. Provide the commands to get the top 10 CPU-consuming processes via SSM Run Command.
-  4. Draft a Slack message to post in #incidents with: alert name, time, current status (investigating),
+  4. Draft a Microsoft Teams message to post in the incidents channel with: alert name, time, current status (investigating),
      and a link placeholder for the runbook.
 
   Format each step clearly. I will run commands and paste output back for further analysis.
