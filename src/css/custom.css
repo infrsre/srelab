@@ -56,7 +56,7 @@
   /* table */
   --ifm-table-border-color: #ede9fe;
   --ifm-table-head-background: #f5f3ff;
-  --ifm-table-stripe-background: #fafafa;
+  --ifm-table-stripe-background: #ffffff;
 
   /* toc */
   --ifm-toc-border-color: #ede9fe;
@@ -97,11 +97,13 @@
 /* ── Base ─────────────────────────────────────────────────────────────────── */
 html {
   scroll-behavior: smooth;
+  background-color: #ffffff;
 }
 
 body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: #ffffff;
 }
 
 /* ── Navbar ───────────────────────────────────────────────────────────────── */
@@ -288,7 +290,7 @@ code {
 }
 
 .markdown table tbody tr:hover {
-  background: #fafafa;
+  background: #ffffff;
   transition: background 0.15s ease;
 }
 
@@ -812,7 +814,7 @@ code {
 }
 
 .kiro-compare__col--muted {
-  background: #fafafa;
+  background: #ffffff;
 }
 
 .kiro-compare__col--active {
@@ -949,7 +951,7 @@ code {
   display: flex;
   align-items: flex-start;
   gap: 1rem;
-  background: linear-gradient(135deg, #faf9ff, #f5f3ff);
+  background: linear-gradient(135deg, #ffffff, #f5f3ff);
   border: 1px solid #e9d5ff;
   border-left: 4px solid #7c3aed;
   border-radius: 10px;
@@ -1209,7 +1211,7 @@ code {
   gap: 0.65rem;
   padding: 0.65rem 1rem;
   border-radius: 8px;
-  background: #faf9ff;
+  background: #ffffff;
   border: 1px solid #ede9fe;
   margin: -0.25rem 0 1.5rem;
 }
