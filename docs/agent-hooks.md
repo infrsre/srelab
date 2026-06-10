@@ -28,16 +28,40 @@ sidebar_position: 4
   </div>
 </div>
 
-## What are Hooks?
+## The Problem Hooks Solve
 
-**Hooks** are event-driven triggers that automatically invoke the Kiro agent when something happens in your project. Instead of manually asking Kiro to do something, you define conditions — and Kiro acts on them.
+Every team has checks that should happen automatically but don't — because they depend on a developer remembering to run them. Someone saves a Terraform file with an open security group. No one notices until CI runs 20 minutes later, or until a reviewer catches it on the PR, or worst of all, until the resource is already deployed.
 
-Hooks live in `.kiro/hooks/` as YAML files. Each hook specifies:
-- **When** to fire (the trigger event)
-- **What** to do (the agent instruction)
-- **Where** to apply it (optional file or path filter)
+**Hooks close that gap.** You write a condition once — "when any `.tf` file is saved" — and attach a Kiro agent instruction. From that point on, the check happens automatically, every time, without anyone having to remember.
 
-## Hook File Structure
+<div className="spec-why">
+  <div className="spec-why__col spec-why__col--bad">
+    <div className="spec-why__label">Without Hooks</div>
+    <ul>
+      <li>Developer saves Terraform, assumes it's fine</li>
+      <li>Pushes to git, CI picks it up 15–20 minutes later</li>
+      <li>Checkov flags missing tags and an open security group</li>
+      <li>Developer context-switches back to fix the issues</li>
+      <li>Repeat for every teammate, on every push</li>
+    </ul>
+  </div>
+  <div className="spec-why__col spec-why__col--good">
+    <div className="spec-why__label">With Hooks</div>
+    <ul>
+      <li>Developer saves Terraform</li>
+      <li>Kiro immediately reviews the file in the background</li>
+      <li>Findings appear as inline comments in the editor</li>
+      <li>Issues caught in seconds, not minutes</li>
+      <li>CI becomes a safety net, not the first line of defence</li>
+    </ul>
+  </div>
+</div>
+
+---
+
+## How Hooks Work
+
+A hook is a YAML file in `.kiro/hooks/`. It has three parts: a **trigger** (when to fire), a **glob or path filter** (which files to watch), and an **instruction** (what to tell the agent).
 
 ```yaml
 # .kiro/hooks/<hook-name>.yaml
@@ -45,13 +69,13 @@ name: Hook Display Name
 description: What this hook does
 trigger:
   type: <event-type>
-  # event-specific config
+  glob: "path/pattern/**"   # optional: limit which files trigger this
 instruction: |
-  The natural language instruction for the agent.
-  Can be multi-line. Reference {{variables}} from the event context.
+  Natural language instruction for the Kiro agent.
+  Reference event context with {{variables}} like {{file_path}} or {{timestamp}}.
 ```
 
-## Trigger Types
+### Trigger types
 
 <div className="trigger-grid">
   <div className="trigger-item">
@@ -76,129 +100,135 @@ instruction: |
   </div>
 </div>
 
-## SRE Example: Auto-Update Runbook on Alert Config Change
+---
 
-When an engineer modifies an alerting rule, the corresponding runbook should be flagged as potentially stale.
+## Demo: Validate Terraform on Every Save
 
-```yaml
-# .kiro/hooks/flag-stale-runbooks.yaml
-name: Flag Stale Runbooks
-description: Marks runbooks as potentially outdated when alert configs change
-trigger:
-  type: file_save
-  glob: "alerts/**/*.yaml"
-instruction: |
-  The alert configuration file {{file_path}} was just modified.
-  Review the runbooks/ directory for any runbook that references this alert.
-  If a matching runbook exists, add a warning banner at the top:
+This is a complete walkthrough of a hook used daily by platform and SRE teams — a `file_save` hook that reviews every Terraform file the moment a developer saves it.
 
-  > ⚠️ This runbook may be outdated. Alert config last changed: {{timestamp}}.
-  > Review and update before next incident.
+### The scenario
 
-  If no matching runbook exists, note it in runbooks/REVIEW-NEEDED.md.
-```
+Your team has Terraform spread across dozens of modules. The rules are well-known: every resource needs standard tags, no security groups open to `0.0.0.0/0`, no hardcoded ARNs, encrypted storage. But these rules live in a wiki. Developers forget. CI catches it — eventually.
 
-## SRE Example: Validate Terraform on Save
+The hook below makes Kiro the reviewer that never forgets.
 
-Catch common Terraform mistakes immediately, before a plan or apply.
+### Step 1 — Create the hook file
+
+Create `.kiro/hooks/validate-terraform.yaml` in your project:
 
 ```yaml
 # .kiro/hooks/validate-terraform.yaml
 name: Validate Terraform on Save
-description: Runs static analysis and best-practice checks on saved Terraform files
+description: Reviews every saved .tf file for security, compliance, and tagging issues
 trigger:
   type: file_save
   glob: "**/*.tf"
 instruction: |
-  The file {{file_path}} was just saved.
-  Review it for the following issues and report findings inline as code comments:
+  The Terraform file {{file_path}} was just saved by the developer.
 
-  1. Resources missing required tags (env, team, cost-center)
-  2. Security groups with 0.0.0.0/0 ingress on non-443/80 ports
-  3. Hardcoded AWS account IDs or ARNs (should be variables or data sources)
-  4. S3 buckets without versioning or encryption enabled
-  5. IAM policies with wildcard actions ("*")
+  Review it and report any of the following issues as inline code comments
+  placed directly above the offending line — do not modify the file itself:
 
-  Do not modify the file. Output a summary of findings only.
+  1. Resources missing required tags: env, team, cost-center, owner
+  2. Security groups with ingress rules open to 0.0.0.0/0 on any port other than 443 or 80
+  3. Hardcoded AWS account IDs or ARNs (these must be variables or data sources)
+  4. S3 buckets without versioning or server-side encryption enabled
+  5. IAM policies using wildcard actions ("*")
+
+  Format each finding as:
+    # ⚠️ HOOK: <issue description> — <one-line fix hint>
+
+  If no issues are found, append a single line comment at the top of the file:
+    # ✓ Hook: no issues found ({{timestamp}})
 ```
 
-## SRE Example: Generate Changelog Entry on Spec Complete
+### Step 2 — The hook appears in Kiro's panel
 
-After a spec runs, automatically draft a changelog entry so nothing gets lost.
+Once the file is saved to `.kiro/hooks/`, Kiro picks it up automatically — no restart needed. Open the Kiro hooks panel to confirm it is active:
 
-```yaml
-# .kiro/hooks/spec-changelog.yaml
-name: Draft Changelog on Spec Complete
-description: Creates a CHANGELOG entry when a spec finishes
-trigger:
-  type: spec_complete
-instruction: |
-  Spec "{{spec_name}}" just completed with the following tasks:
-  {{completed_tasks}}
+![Kiro hooks panel showing the Validate Terraform hook registered and ready — the trigger type, glob pattern, and last run status are visible](/img/tutorial/hooks.png)
 
-  Add an entry to CHANGELOG.md under the [Unreleased] section with:
-  - A one-line summary of what changed
-  - The affected components (inferred from changed file paths)
-  - Date: {{date}}
+The panel shows every hook in your project, its trigger type, and whether it last ran successfully. This is where you enable, disable, or manually trigger a hook during development.
 
-  Follow the existing CHANGELOG.md format exactly.
+### Step 3 — A developer saves a Terraform file
+
+Here is the file the developer just saved (`terraform/iam.tf`):
+
+```hcl
+resource "aws_iam_role_policy" "lambda_policy" {
+  name = "incident-bot-policy"
+  role = aws_iam_role.lambda_exec.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = "*"
+      Resource = "arn:aws:ssm:us-east-1:123456789012:parameter/incident-bot/*"
+    }]
+  })
+}
 ```
 
-## SRE Example: Post Incident Summary on Git Commit
+Two problems are immediately visible to an experienced reviewer — but a developer under time pressure might not notice.
 
-When an engineer commits to the `incidents/` directory, post a summary to Microsoft Teams.
+### Step 4 — Kiro's inline findings
 
-```yaml
-# .kiro/hooks/incident-summary-notify.yaml
-name: Notify on Incident Doc Commit
-description: Posts a Teams-ready summary when an incident doc is committed
-trigger:
-  type: git_commit
-  paths:
-    - "incidents/**"
-instruction: |
-  A commit was just made that includes changes to: {{changed_files}}
+Within seconds of the save, Kiro adds inline comments to the file:
 
-  Read the modified incident document(s) and produce a Microsoft Teams-formatted summary:
-  - Incident title and severity
-  - Duration (start/end from the doc)
-  - Root cause (one sentence)
-  - Action items with owners (bulleted)
+```hcl
+# ⚠️ HOOK: IAM policy uses wildcard Action "*" — restrict to ssm:GetParameter only
+# ⚠️ HOOK: Hardcoded AWS account ID in ARN — replace with data.aws_caller_identity.current.account_id
+resource "aws_iam_role_policy" "lambda_policy" {
+  name = "incident-bot-policy"
+  role = aws_iam_role.lambda_exec.id
 
-  Save the summary to incidents/summaries/{{commit_sha}}.md
-  so it can be posted to Microsoft Teams via the CI pipeline.
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = "*"
+      Resource = "arn:aws:ssm:us-east-1:123456789012:parameter/incident-bot/*"
+    }]
+  })
+}
 ```
 
-## SRE Example: Manual Hook — Diagnose High CPU Alert
+The developer fixes both issues without leaving the editor. The corrected file:
 
-A hook you invoke on demand when a CPU alert fires, giving the agent context to help triage.
+```hcl
+# ✓ Hook: no issues found (2026-06-10T09:14:22Z)
+resource "aws_iam_role_policy" "lambda_policy" {
+  name = "incident-bot-policy"
+  role = aws_iam_role.lambda_exec.id
 
-```yaml
-# .kiro/hooks/diagnose-cpu-alert.yaml
-name: Diagnose High CPU Alert
-description: Guides incident response for CPU saturation alerts
-trigger:
-  type: manual
-instruction: |
-  A high CPU alert has fired. Help me triage it:
-
-  1. List the most likely causes of CPU saturation for a Python web service on EC2.
-  2. Provide the exact CloudWatch CLI commands to pull CPU metrics for the last 30 minutes.
-  3. Provide the commands to get the top 10 CPU-consuming processes via SSM Run Command.
-  4. Draft a Microsoft Teams message to post in the incidents channel with: alert name, time, current status (investigating),
-     and a link placeholder for the runbook.
-
-  Format each step clearly. I will run commands and paste output back for further analysis.
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = ["ssm:GetParameter"]
+      Resource = "arn:aws:ssm:us-east-1:${data.aws_caller_identity.current.account_id}:parameter/incident-bot/*"
+    }]
+  })
+}
 ```
 
-## Hook Best Practices
+No context switch, no CI wait, no PR comment thread. The issue was caught, explained, and fixed in under a minute.
 
-**Keep instructions specific.** Hooks run without human prompting — vague instructions produce inconsistent results.
+---
 
-**Use file globs to limit scope.** A `file_save` hook on `**/*` fires constantly. Target it: `terraform/**/*.tf`, `alerts/*.yaml`.
+## Starting Safely: Use `manual` First
 
-**Prefer read-only hooks for automation.** Hooks that modify files can cause loops (save → hook fires → saves → hook fires). Make sure your hook only writes to a different path than its trigger.
+Before setting any hook to fire automatically, develop it as a `manual` hook. Change the trigger to `type: manual`, run it from the command palette a few times, and verify the output is correct. Once you are confident in the instruction, switch it back to `file_save` or `git_commit`.
 
-**Test with `manual` triggers first.** Before setting a hook to fire automatically, set `type: manual` and run it a few times to verify the output is correct.
+This prevents a badly-written instruction from firing on every save before you have tested it.
 
-**Log hook activity.** Add an instruction line to append a line to `.kiro/hook-log.md` with the timestamp and file — useful for auditing what the agent changed and when.
+---
+
+## Three Rules for Reliable Hooks
+
+**Write to a different path than you read from.** A hook triggered by saving `src/*.py` must not write back to `src/*.py` — that creates a save loop. Write findings to a log file, a separate review directory, or inline comments only.
+
+**Be specific with globs.** `file_save` on `**/*` fires on every keystroke autosave. Target exactly what you mean: `terraform/**/*.tf`, `alerts/*.yaml`, `src/**/*.py`.
+
+**Keep the instruction concrete.** Name the exact checks, the exact output format, and the exact file to write results to. Vague instructions produce inconsistent output when the hook fires unattended.
