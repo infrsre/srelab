@@ -2,7 +2,7 @@
 id: agent-hooks
 title: Agent Hooks
 sidebar_label: Agent Hooks
-sidebar_position: 3
+sidebar_position: 4
 ---
 
 # Agent Hooks

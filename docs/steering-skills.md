@@ -2,7 +2,7 @@
 id: steering-skills
 title: Agent Steering & Skills
 sidebar_label: Steering & Skills
-sidebar_position: 4
+sidebar_position: 5
 ---
 
 # Agent Steering &amp; Skills

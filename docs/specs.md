@@ -2,7 +2,7 @@
 id: specs
 title: Kiro Specs
 sidebar_label: Specs
-sidebar_position: 2
+sidebar_position: 3
 ---
 
 # Kiro Specs

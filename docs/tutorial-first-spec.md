@@ -1,11 +1,11 @@
 ---
 id: tutorial-first-spec
-title: "Tutorial: Build a CloudWatch Alert with Kiro"
-sidebar_label: "Tutorial: Your First Spec"
-sidebar_position: 3
+title: "Tutorial: Build an Incident Automation Bot with Kiro"
+sidebar_label: "Tutorial: Incident Bot"
+sidebar_position: 2
 ---
 
-# Tutorial: Build a CloudWatch Alert with Kiro
+# Tutorial: Build an Incident Automation Bot with Kiro
 
 <div className="page-intro">
   <div className="page-intro__icon">
@@ -15,504 +15,750 @@ sidebar_position: 3
   </div>
   <div>
     <p className="page-intro__desc">
-      A complete beginner walkthrough. You'll write a Kiro Spec, watch the agent build real AWS infrastructure,
-      review every change, and ship a working CloudWatch alerting setup — without writing a single line of Terraform manually.
+      Build a real automation project from scratch — a Lambda function that receives PagerDuty alerts
+      and posts structured incident messages to Slack, complete with Terraform infrastructure and CI/CD.
+      Kiro writes every file. You review every diff.
     </p>
     <div className="page-intro__tags">
-      <span className="pi-tag">~20 min</span>
+      <span className="pi-tag">~25 min</span>
       <span className="pi-tag">Beginner</span>
-      <span className="pi-tag">AWS / Terraform</span>
-      <span className="pi-tag">Real-world SRE</span>
+      <span className="pi-tag">Python · AWS Lambda</span>
+      <span className="pi-tag">Full project</span>
     </div>
   </div>
 </div>
 
-## What You'll Build
+## The Problem
 
-You're an SRE engineer. Your ECS service (`payments-api`) went down last week and nobody got paged. Your task: set up CloudWatch alarms so the team gets a PagerDuty alert when:
+Every time PagerDuty fires an alert, your on-call engineer manually:
 
-- CPU usage exceeds **80%** for 5 minutes
-- ALB 5xx error rate exceeds **1%** over 15 minutes
-- ECS task count drops below **2** (the minimum healthy count)
+1. Opens PagerDuty to read the alert title and severity
+2. Finds the right Slack channel
+3. Writes an incident message by hand
+4. Pastes the runbook link from the wiki
+5. Tags the affected service team
 
-You'll do all of this through Kiro — no manually writing Terraform, no hunting CloudWatch docs.
+That's 3–5 minutes of cognitive overhead at 2 AM. Multiply by 40 incidents a month and it's a real problem.
+
+**Your goal:** Build a bot that does all of this automatically.
 
 <div className="tutorial-outcome">
-  <div className="tutorial-outcome__icon">✓</div>
+  <div className="tutorial-outcome__icon">📦</div>
   <div>
-    <strong>End result:</strong> A Terraform module at <code>modules/cloudwatch-alerts/</code> with three alarms,
-    SNS topic, PagerDuty integration, and a runbook linked from each alert. Reviewed, accepted, and commit-ready.
+    <strong>What you'll build:</strong> A Python AWS Lambda function behind an API Gateway that receives PagerDuty webhooks,
+    formats a rich Slack message with severity badge, service name, on-call engineer, and runbook link,
+    and posts it to <code>#incidents</code> — all deployed via Terraform and a GitHub Actions pipeline.
   </div>
 </div>
+
+### The file tree Kiro will produce
+
+```
+incident-bot/
+├── src/
+│   ├── handler.py        ← Lambda entry point
+│   ├── pagerduty.py      ← Webhook parser and event models
+│   ├── slack.py          ← Message formatter and Slack API client
+│   └── runbooks.py       ← Runbook URL resolver by service name
+├── tests/
+│   ├── test_handler.py
+│   ├── test_slack.py
+│   └── fixtures/
+│       └── pagerduty_trigger.json   ← Sample webhook payload
+├── terraform/
+│   ├── main.tf           ← Lambda + API Gateway
+│   ├── iam.tf            ← Lambda execution role
+│   ├── variables.tf
+│   └── outputs.tf
+├── .github/
+│   └── workflows/
+│       └── deploy.yml    ← Build → Test → Terraform apply
+└── requirements.txt
+```
+
+You will write **none of this manually**. You write the spec; Kiro writes the code.
 
 ---
 
 ## Before You Start
 
 You need:
-- **Kiro installed** — download from [kiro.dev](https://kiro.dev)
-- **A project repo open in Kiro** — any repo with a `modules/` folder works, or create an empty one
-- **5 minutes** to read the spec format once before writing your own
+- **Kiro installed** — [kiro.dev](https://kiro.dev)
+- **An empty repo** open in Kiro (create `incident-bot/` and open it)
+- **A Slack Incoming Webhook URL** — create one at [api.slack.com/apps](https://api.slack.com/apps) → Incoming Webhooks → Add New Webhook → pick `#incidents`
+- **Basic Python familiarity** — you don't need to write any, but reviewing the diffs will be easier
 
-:::tip New to Kiro?
-If you haven't opened Kiro before, launch it and open a folder (`File → Open Folder`). Kiro works on top of your existing repo — it doesn't replace your editor.
+:::tip No AWS account yet?
+You can still follow this tutorial. Kiro will write all the code and Terraform. You just won't run the `terraform apply` step at the end. Everything up to that point is local.
 :::
 
 ---
 
-## Step 1 — Open the Kiro Command Palette
+## Step 1 — Create the Spec
 
-Press **`Cmd + Shift + P`** (Mac) or **`Ctrl + Shift + P`** (Windows/Linux) to open the command palette.
+Open Kiro's command palette: **`Cmd/Ctrl + Shift + P`** → type **`Kiro: New Spec`** → name it `incident-slack-bot`.
 
-<div className="ide-window">
-  <div className="ide-window__bar">
-    <span className="ide-window__dot ide-window__dot--red"></span>
-    <span className="ide-window__dot ide-window__dot--yellow"></span>
-    <span className="ide-window__dot ide-window__dot--green"></span>
-    <span className="ide-window__title">Kiro — payments-api</span>
-  </div>
-  <div className="ide-window__body">
-    <div className="ide-cmd-palette">
-      <div className="ide-cmd-palette__input">
-        <span className="ide-cmd-palette__icon">⌘</span>
-        <span className="ide-cmd-palette__text">Kiro: New Spec<span className="ide-cmd-palette__cursor">|</span></span>
-      </div>
-      <div className="ide-cmd-palette__results">
-        <div className="ide-cmd-palette__item ide-cmd-palette__item--active">
-          <span className="ide-cmd-palette__item-icon">📄</span>
-          <span><strong>Kiro: New Spec</strong> — Create a new spec in .kiro/specs/</span>
-        </div>
-        <div className="ide-cmd-palette__item">
-          <span className="ide-cmd-palette__item-icon">▶</span>
-          <span>Kiro: Run Spec — Execute the current spec file</span>
-        </div>
-        <div className="ide-cmd-palette__item">
-          <span className="ide-cmd-palette__item-icon">🔧</span>
-          <span>Kiro: Generate Tasks — Auto-generate task list from Requirements + Design</span>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-Type **`Kiro: New Spec`** and press Enter. Kiro will prompt you for a name.
-
-Enter: `cloudwatch-alerts-payments`
-
-Kiro creates `.kiro/specs/cloudwatch-alerts-payments.md` and opens it for editing.
+Kiro creates `.kiro/specs/incident-slack-bot.md` and opens it.
 
 ---
 
-## Step 2 — Write Your Requirements
+## Step 2 — Write the Requirements
 
-The **Requirements** section answers: *What must this do, and why?*
-
-Write it from the perspective of the person who needs it (you, the on-call engineer):
+Copy this into the Requirements section of your spec:
 
 <div className="ide-window">
   <div className="ide-window__bar">
     <span className="ide-window__dot ide-window__dot--red"></span>
     <span className="ide-window__dot ide-window__dot--yellow"></span>
     <span className="ide-window__dot ide-window__dot--green"></span>
-    <span className="ide-window__title">.kiro/specs/cloudwatch-alerts-payments.md</span>
+    <span className="ide-window__title">.kiro/specs/incident-slack-bot.md</span>
   </div>
   <div className="ide-window__body ide-window__body--code">
 
 ```markdown
 ## Requirements
 
-- As an on-call SRE, I need CloudWatch alarms for the payments-api ECS service
-  so that I get paged immediately when the service degrades.
+- As an on-call SRE, I need PagerDuty alerts automatically posted to Slack
+  so that the whole team is aware of incidents without anyone having to
+  manually copy-paste from PagerDuty.
 
-- Alarm 1 — CPU: Alert when ECS CPU utilization > 80% for 5 consecutive minutes.
-- Alarm 2 — 5xx rate: Alert when ALB HTTPCode_Target_5XX_Count / RequestCount > 1%
-  over any 15-minute window.
-- Alarm 3 — Task count: Alert when ECS RunningTaskCount < 2 for 3 minutes.
+- When a PagerDuty "trigger" event fires, post a message to the #incidents
+  Slack channel containing:
+    - Severity badge (P1/P2/P3/P4 with color coding)
+    - Incident title from PagerDuty
+    - Affected service name
+    - On-call engineer's name
+    - Runbook URL (looked up by service name from a YAML config)
+    - Link back to the PagerDuty incident
 
-- All alarms must route to PagerDuty via SNS.
-- Each alarm description must include a link to the relevant runbook in `runbooks/`.
-- Terraform must use variables for: environment, service_name, pagerduty_endpoint.
-- Module must be reusable — other services should be able to call it with their own values.
+- When a PagerDuty "resolve" event fires, post a "✅ Resolved" follow-up
+  to the same Slack channel referencing the original incident title.
+
+- The bot must be a Python AWS Lambda function triggered by API Gateway.
+- Secrets (Slack webhook URL, PagerDuty signing secret) must come from
+  AWS SSM Parameter Store — never hardcoded.
+- All errors must be logged to CloudWatch and must not crash the Lambda
+  (return HTTP 200 to PagerDuty even on soft errors so it stops retrying).
 ```
 
   </div>
 </div>
 
-:::info Why write it this way?
-User-story format ("As a [role], I need [thing] so that [reason]") gives Kiro context on *who* benefits and *why* it matters. This produces better generated code than a plain bullet list.
+:::info Why mention "never hardcoded" in Requirements?
+Kiro reads your Requirements to understand constraints, not just features.
+Saying "secrets must come from SSM" tells Kiro to use `boto3` SSM calls
+rather than `os.environ` — a meaningful architectural difference it would
+otherwise guess at.
 :::
 
 ---
 
-## Step 3 — Write Your Design
+## Step 3 — Write the Design
 
-The **Design** section answers: *How should it be built?*
-
-This is where you tell Kiro the architecture — file layout, conventions, and any existing patterns to follow:
+Add this Design section below Requirements:
 
 <div className="ide-window">
   <div className="ide-window__bar">
     <span className="ide-window__dot ide-window__dot--red"></span>
     <span className="ide-window__dot ide-window__dot--yellow"></span>
     <span className="ide-window__dot ide-window__dot--green"></span>
-    <span className="ide-window__title">.kiro/specs/cloudwatch-alerts-payments.md</span>
+    <span className="ide-window__title">.kiro/specs/incident-slack-bot.md</span>
   </div>
   <div className="ide-window__body ide-window__body--code">
 
 ```markdown
 ## Design
 
-- Module path: `modules/cloudwatch-alerts/`
-- Follow the structure of the existing `modules/rds-alarms/` module (variables.tf,
-  main.tf, outputs.tf, README.md)
-- Use AWS provider ~> 5.0
-- Alarm actions: SNS topic ARN passed as a variable (pagerduty_sns_arn)
-- Metric filters:
-    - CPU: AWS/ECS namespace, CPUUtilization metric, dimensions: ClusterName + ServiceName
-    - 5xx: AWS/ApplicationELB, HTTPCode_Target_5XX_Count + RequestCount (expression alarm)
-    - Tasks: ECS/ContainerInsights, RunningTaskCount
-- Expression alarm for 5xx rate:
-    RATE = m_5xx / m_requests * 100
-    Threshold: > 1, treat_missing_data = "notBreaching"
-- Outputs: alarm_arns (list), sns_topic_arn
-- Example usage in `examples/cloudwatch-alerts-payments/main.tf`
+### Project layout
+- src/handler.py      — Lambda entry: validates signature, routes to trigger/resolve handlers
+- src/pagerduty.py    — Dataclass models for PagerDuty webhook payload, HMAC signature validation
+- src/slack.py        — SlackClient class + message_blocks() builder (use Block Kit, not plain text)
+- src/runbooks.py     — load runbooks.yaml and return URL for a given service name
+- tests/              — pytest, one file per module, fixtures in tests/fixtures/
+- terraform/          — Lambda + API Gateway HTTP API (not REST API), SSM reads via data sources
+
+### Python details
+- Python 3.12, no framework (plain Lambda handler, no FastAPI/Flask)
+- Use dataclasses for PagerDuty event models
+- Slack Block Kit format: header block (severity + title), section block (service/oncall/runbook), actions block (PagerDuty link button)
+- Severity color map: P1=#FF0000, P2=#FF8C00, P3=#FFC200, P4=#36A64F
+- runbooks.yaml lives at the project root, keyed by service name:
+    payments-api: https://wiki.internal/runbooks/payments-api
+    auth-service: https://wiki.internal/runbooks/auth-service
+
+### Terraform details
+- AWS Lambda (zip deployment from src/ + requirements.txt)
+- API Gateway HTTP API with a single POST /webhook route → Lambda integration
+- IAM role: AWSLambdaBasicExecutionRole + ssm:GetParameter for /incident-bot/*
+- Lambda env vars: SSM_SLACK_PARAM=/incident-bot/slack-webhook, SSM_PD_SECRET_PARAM=/incident-bot/pd-secret
+- No VPC (public Lambda is fine for a webhook receiver)
+
+### GitHub Actions
+- On push to main: pip install → pytest → zip → terraform apply
+- Terraform state in S3 backend (bucket name from GitHub secret TF_STATE_BUCKET)
 ```
 
   </div>
 </div>
-
-:::tip Reference what already exists
-Saying **"follow the structure of `modules/rds-alarms/`"** tells Kiro to read that module first and match its style. This is one of the most powerful things you can put in a Design section — Kiro will inherit your team's conventions automatically.
-:::
 
 ---
 
 ## Step 4 — Generate Tasks
 
-Now click **Generate Tasks** in the Kiro sidebar (or run `Kiro: Generate Tasks` from the command palette).
-
-Kiro reads your Requirements and Design, then proposes a task list:
+Click **Generate Tasks** in the Kiro sidebar. Kiro reads both sections and produces:
 
 <div className="ide-window">
   <div className="ide-window__bar">
     <span className="ide-window__dot ide-window__dot--red"></span>
     <span className="ide-window__dot ide-window__dot--yellow"></span>
     <span className="ide-window__dot ide-window__dot--green"></span>
-    <span className="ide-window__title">Kiro — Generate Tasks</span>
+    <span className="ide-window__title">Generated Tasks</span>
   </div>
   <div className="ide-window__body ide-window__body--code">
 
 ```markdown
 ## Tasks
 
-- [ ] 1. Create `modules/cloudwatch-alerts/variables.tf` with documented inputs:
-         environment, service_name, cluster_name, alb_arn_suffix,
-         pagerduty_sns_arn, cpu_threshold, error_rate_threshold, min_task_count
-- [ ] 2. Create `modules/cloudwatch-alerts/main.tf` with:
-         - aws_cloudwatch_metric_alarm for CPU
-         - aws_cloudwatch_metric_alarm for 5xx rate (metric math expression)
-         - aws_cloudwatch_metric_alarm for running task count
-- [ ] 3. Create `modules/cloudwatch-alerts/outputs.tf` with alarm_arns and sns_topic_arn
-- [ ] 4. Create `modules/cloudwatch-alerts/README.md` with usage example and variable docs
-- [ ] 5. Create `examples/cloudwatch-alerts-payments/main.tf` calling the module
-         with payments-api values
-- [ ] 6. Update `runbooks/payments-api-cpu.md` with alarm context and diagnostic steps
-- [ ] 7. Update `runbooks/payments-api-5xx.md` with triage steps and escalation path
-- [ ] 8. Update `runbooks/payments-api-tasks.md` with ECS task recovery steps
+- [ ] 1. Create `requirements.txt` (boto3, pytest, requests)
+- [ ] 2. Create `src/pagerduty.py` — PagerDutyEvent dataclass + validate_signature()
+- [ ] 3. Create `src/runbooks.py` — load_runbooks() from runbooks.yaml
+- [ ] 4. Create `runbooks.yaml` with payments-api and auth-service entries
+- [ ] 5. Create `src/slack.py` — SlackClient class, message_blocks() with Block Kit format
+- [ ] 6. Create `src/handler.py` — Lambda entry point, route trigger vs resolve events
+- [ ] 7. Create `tests/fixtures/pagerduty_trigger.json` — realistic sample webhook payload
+- [ ] 8. Create `tests/test_handler.py` — test trigger and resolve paths, mock SSM + Slack
+- [ ] 9. Create `tests/test_slack.py` — test Block Kit message structure and severity colors
+- [ ] 10. Create `terraform/variables.tf`
+- [ ] 11. Create `terraform/iam.tf` — Lambda execution role with SSM permissions
+- [ ] 12. Create `terraform/main.tf` — Lambda + API Gateway HTTP API
+- [ ] 13. Create `terraform/outputs.tf` — webhook_url output
+- [ ] 14. Create `.github/workflows/deploy.yml` — test + terraform apply pipeline
 ```
 
   </div>
 </div>
 
-Look over the task list. If Kiro missed something or split a task wrong, edit it directly — it's just Markdown. When you're happy, move on.
+14 tasks across Python, tests, Terraform, and CI/CD — generated in about 10 seconds.
+
+Scan the list. If a task is missing (e.g., you want a `Makefile`), add it now. When ready, click **Run Spec**.
 
 ---
 
-## Step 5 — Run the Spec
+## Step 5 — Watch the Agent Build It
 
-Click **Run Spec** (or `Kiro: Run Spec`). The agent starts executing tasks one by one.
-
-Watch the Kiro Agent panel on the right side of your screen:
+The Kiro Agent panel shows live progress. Each task takes 20–40 seconds:
 
 <div className="ide-window">
   <div className="ide-window__bar">
     <span className="ide-window__dot ide-window__dot--red"></span>
     <span className="ide-window__dot ide-window__dot--yellow"></span>
     <span className="ide-window__dot ide-window__dot--green"></span>
-    <span className="ide-window__title">Kiro Agent — cloudwatch-alerts-payments</span>
+    <span className="ide-window__title">Kiro Agent — incident-slack-bot</span>
   </div>
   <div className="ide-window__body">
     <div className="agent-log">
       <div className="agent-log__line agent-log__line--done">
         <span className="agent-log__status">✓</span>
-        <span>Task 1 — Reading <code>modules/rds-alarms/variables.tf</code> for reference...</span>
+        <span>Task 1 — Created <code>requirements.txt</code></span>
       </div>
       <div className="agent-log__line agent-log__line--done">
         <span className="agent-log__status">✓</span>
-        <span>Task 1 — Writing <code>modules/cloudwatch-alerts/variables.tf</code></span>
+        <span>Task 2 — Created <code>src/pagerduty.py</code> with HMAC validation</span>
       </div>
       <div className="agent-log__line agent-log__line--done">
         <span className="agent-log__status">✓</span>
-        <span>Task 2 — Writing <code>modules/cloudwatch-alerts/main.tf</code> (CPU alarm)</span>
+        <span>Task 3–4 — Created <code>src/runbooks.py</code> + <code>runbooks.yaml</code></span>
       </div>
       <div className="agent-log__line agent-log__line--done">
         <span className="agent-log__status">✓</span>
-        <span>Task 2 — Writing <code>modules/cloudwatch-alerts/main.tf</code> (5xx rate expression alarm)</span>
+        <span>Task 5 — Created <code>src/slack.py</code> with Block Kit builder</span>
       </div>
       <div className="agent-log__line agent-log__line--active">
         <span className="agent-log__status agent-log__status--spin">◌</span>
-        <span>Task 2 — Writing <code>modules/cloudwatch-alerts/main.tf</code> (task count alarm)...</span>
+        <span>Task 6 — Writing <code>src/handler.py</code> — Lambda entry point...</span>
       </div>
       <div className="agent-log__line agent-log__line--pending">
         <span className="agent-log__status">○</span>
-        <span>Task 3 — outputs.tf</span>
+        <span>Tasks 7–9 — Tests + fixtures</span>
       </div>
       <div className="agent-log__line agent-log__line--pending">
         <span className="agent-log__status">○</span>
-        <span>Task 4 — README.md</span>
+        <span>Tasks 10–13 — Terraform</span>
       </div>
       <div className="agent-log__line agent-log__line--pending">
         <span className="agent-log__status">○</span>
-        <span>Tasks 5–8 — pending</span>
+        <span>Task 14 — GitHub Actions</span>
       </div>
     </div>
   </div>
 </div>
 
-You don't need to do anything here — Kiro is working. Grab a coffee. It takes 30–60 seconds per task depending on file size.
+You don't touch the keyboard. Kiro is reading your spec, reasoning about each file's dependencies, and generating in order (it writes `pagerduty.py` before `handler.py` because `handler.py` imports it).
 
 ---
 
-## Step 6 — Review the Diff
+## Step 6 — Review the Python Code
 
-When a task completes, Kiro surfaces a **diff** in the editor. Nothing is written to disk until you accept it.
-
-Here's what the `main.tf` diff looks like:
+When Task 6 completes, Kiro shows you the `handler.py` diff. This is the most important file — read it carefully:
 
 <div className="ide-window">
   <div className="ide-window__bar">
     <span className="ide-window__dot ide-window__dot--red"></span>
     <span className="ide-window__dot ide-window__dot--yellow"></span>
     <span className="ide-window__dot ide-window__dot--green"></span>
-    <span className="ide-window__title">Diff — modules/cloudwatch-alerts/main.tf</span>
+    <span className="ide-window__title">Diff — src/handler.py</span>
   </div>
   <div className="ide-window__body ide-window__body--diff">
 
 ```diff
-+ resource "aws_cloudwatch_metric_alarm" "cpu_high" {
-+   alarm_name          = "${var.environment}-${var.service_name}-cpu-high"
-+   alarm_description   = "CPU > ${var.cpu_threshold}% for 5min. Runbook: runbooks/payments-api-cpu.md"
-+   comparison_operator = "GreaterThanThreshold"
-+   evaluation_periods  = 5
-+   metric_name         = "CPUUtilization"
-+   namespace           = "AWS/ECS"
-+   period              = 60
-+   statistic           = "Average"
-+   threshold           = var.cpu_threshold
-+   alarm_actions       = [var.pagerduty_sns_arn]
-+   ok_actions          = [var.pagerduty_sns_arn]
++ import json
++ import logging
++ import boto3
++ from pagerduty import PagerDutyEvent, validate_signature
++ from slack import SlackClient
++ from runbooks import load_runbooks
 +
-+   dimensions = {
-+     ClusterName = var.cluster_name
-+     ServiceName = var.service_name
-+   }
-+ }
++ logger = logging.getLogger()
++ logger.setLevel(logging.INFO)
 +
-+ resource "aws_cloudwatch_metric_alarm" "error_rate_high" {
-+   alarm_name          = "${var.environment}-${var.service_name}-5xx-rate"
-+   alarm_description   = "5xx rate > ${var.error_rate_threshold}%. Runbook: runbooks/payments-api-5xx.md"
-+   comparison_operator = "GreaterThanThreshold"
-+   evaluation_periods  = 3
-+   threshold           = var.error_rate_threshold
-+   treat_missing_data  = "notBreaching"
-+   alarm_actions       = [var.pagerduty_sns_arn]
++ ssm = boto3.client("ssm")
 +
-+   metric_query {
-+     id          = "m_5xx"
-+     return_data = false
-+     metric {
-+       metric_name = "HTTPCode_Target_5XX_Count"
-+       namespace   = "AWS/ApplicationELB"
-+       period      = 300
-+       stat        = "Sum"
-+       dimensions  = { LoadBalancer = var.alb_arn_suffix }
-+     }
-+   }
-+   # ... (metric_query for requests and rate expression)
-+ }
++ def _get_param(name: str) -> str:
++     return ssm.get_parameter(Name=name, WithDecryption=True)["Parameter"]["Value"]
++
++ def lambda_handler(event: dict, context) -> dict:
++     try:
++         body = event.get("body", "")
++         signature = event.get("headers", {}).get("x-pagerduty-signature", "")
++         pd_secret = _get_param(os.environ["SSM_PD_SECRET_PARAM"])
++
++         if not validate_signature(body, signature, pd_secret):
++             logger.warning("Invalid PagerDuty signature — ignoring request")
++             return {"statusCode": 200, "body": "ignored"}
++
++         payload = json.loads(body)
++         pd_event = PagerDutyEvent.from_webhook(payload)
++         slack_webhook = _get_param(os.environ["SSM_SLACK_PARAM"])
++         runbooks = load_runbooks()
++         client = SlackClient(slack_webhook)
++
++         if pd_event.event_type == "trigger":
++             runbook_url = runbooks.get(pd_event.service, "https://wiki.internal/runbooks")
++             client.post_incident(pd_event, runbook_url)
++             logger.info(f"Posted incident: {pd_event.incident_id}")
++
++         elif pd_event.event_type == "resolve":
++             client.post_resolved(pd_event)
++             logger.info(f"Posted resolve: {pd_event.incident_id}")
++
++     except Exception as e:
++         logger.error(f"Unhandled error: {e}", exc_info=True)
++
++     # Always return 200 — PagerDuty retries on non-2xx
++     return {"statusCode": 200, "body": "ok"}
 ```
 
   </div>
 </div>
 
-**For each task you have three options:**
+**What to check in this diff:**
 
-<div className="review-options">
-  <div className="review-option review-option--accept">
-    <strong>✓ Accept</strong>
-    <p>Writes the file to disk. Move to the next task.</p>
+<div className="review-checklist">
+  <div className="review-checklist__item review-checklist__item--good">
+    <span>✓</span>
+    <span>Signature validation happens before processing — correct security order</span>
   </div>
-  <div className="review-option review-option--reject">
-    <strong>✗ Reject</strong>
-    <p>Discards the change. Kiro re-queues the task — you can add a note explaining what to fix.</p>
+  <div className="review-checklist__item review-checklist__item--good">
+    <span>✓</span>
+    <span>Exceptions are caught and logged but never re-raised — Lambda always returns 200 as required</span>
   </div>
-  <div className="review-option review-option--edit">
-    <strong>✎ Edit then Accept</strong>
-    <p>Modify the diff inline before accepting. Good for small tweaks.</p>
+  <div className="review-checklist__item review-checklist__item--good">
+    <span>✓</span>
+    <span>SSM calls use <code>WithDecryption=True</code> — correct for SecureString params</span>
+  </div>
+  <div className="review-checklist__item review-checklist__item--warn">
+    <span>⚠</span>
+    <span>Missing <code>import os</code> — Kiro occasionally misses an import. Edit it inline before accepting.</span>
   </div>
 </div>
 
-:::tip What to look for when reviewing
-- Variable names match your team's convention (`var.environment` not `var.env`)
-- Alarm thresholds match your SLO targets
-- Runbook links point to files that actually exist
-- `treat_missing_data` is set correctly (missing data should not trigger alarms)
-:::
+Click **Edit then Accept**, add `import os` on line 2, then accept.
 
-Accept all tasks. Kiro marks each task `[x]` in the spec as it's accepted.
-
----
-
-## Step 7 — The Finished Spec
-
-After all tasks are accepted, your spec looks like this:
+Now review `src/slack.py` — the Block Kit message builder:
 
 <div className="ide-window">
   <div className="ide-window__bar">
     <span className="ide-window__dot ide-window__dot--red"></span>
     <span className="ide-window__dot ide-window__dot--yellow"></span>
     <span className="ide-window__dot ide-window__dot--green"></span>
-    <span className="ide-window__title">.kiro/specs/cloudwatch-alerts-payments.md</span>
+    <span className="ide-window__title">Diff — src/slack.py</span>
+  </div>
+  <div className="ide-window__body ide-window__body--diff">
+
+```diff
++ import requests
++ from dataclasses import dataclass
++ from pagerduty import PagerDutyEvent
++
++ SEVERITY_COLORS = {
++     "P1": "#FF0000",
++     "P2": "#FF8C00",
++     "P3": "#FFC200",
++     "P4": "#36A64F",
++ }
++
++ @dataclass
++ class SlackClient:
++     webhook_url: str
++
++     def post_incident(self, event: PagerDutyEvent, runbook_url: str) -> None:
++         color = SEVERITY_COLORS.get(event.severity, "#CCCCCC")
++         blocks = [
++             {
++                 "type": "header",
++                 "text": {"type": "plain_text",
++                          "text": f"🚨 {event.severity} — {event.title}"}
++             },
++             {
++                 "type": "section",
++                 "fields": [
++                     {"type": "mrkdwn", "text": f"*Service:*\n{event.service}"},
++                     {"type": "mrkdwn", "text": f"*On-call:*\n{event.oncall_name}"},
++                     {"type": "mrkdwn", "text": f"*Runbook:*\n<{runbook_url}|Open runbook>"},
++                     {"type": "mrkdwn", "text": f"*Incident ID:*\n{event.incident_id}"},
++                 ]
++             },
++             {
++                 "type": "actions",
++                 "elements": [{
++                     "type": "button",
++                     "text": {"type": "plain_text", "text": "View in PagerDuty"},
++                     "url": event.html_url,
++                     "style": "danger" if event.severity in ("P1", "P2") else "primary"
++                 }]
++             }
++         ]
++         payload = {"attachments": [{"color": color, "blocks": blocks}]}
++         requests.post(self.webhook_url, json=payload, timeout=5)
++
++     def post_resolved(self, event: PagerDutyEvent) -> None:
++         payload = {
++             "text": f"✅ *Resolved* — {event.title} (`{event.incident_id}`)"
++         }
++         requests.post(self.webhook_url, json=payload, timeout=5)
+```
+
+  </div>
+</div>
+
+This is production-quality Slack Block Kit code. Accept it.
+
+---
+
+## Step 7 — Review the Terraform
+
+After the Python files, Kiro generates the infrastructure. Review `terraform/main.tf`:
+
+<div className="ide-window">
+  <div className="ide-window__bar">
+    <span className="ide-window__dot ide-window__dot--red"></span>
+    <span className="ide-window__dot ide-window__dot--yellow"></span>
+    <span className="ide-window__dot ide-window__dot--green"></span>
+    <span className="ide-window__title">Diff — terraform/main.tf</span>
+  </div>
+  <div className="ide-window__body ide-window__body--diff">
+
+```diff
++ data "archive_file" "lambda_zip" {
++   type        = "zip"
++   source_dir  = "${path.module}/../src"
++   output_path = "${path.module}/lambda.zip"
++ }
++
++ resource "aws_lambda_function" "incident_bot" {
++   filename         = data.archive_file.lambda_zip.output_path
++   source_code_hash = data.archive_file.lambda_zip.output_base64sha256
++   function_name    = "${var.environment}-incident-bot"
++   role             = aws_iam_role.lambda_exec.arn
++   handler          = "handler.lambda_handler"
++   runtime          = "python3.12"
++   timeout          = 30
++
++   environment {
++     variables = {
++       SSM_SLACK_PARAM    = "/incident-bot/slack-webhook"
++       SSM_PD_SECRET_PARAM = "/incident-bot/pd-secret"
++     }
++   }
++ }
++
++ resource "aws_apigatewayv2_api" "webhook" {
++   name          = "${var.environment}-incident-bot-api"
++   protocol_type = "HTTP"
++ }
++
++ resource "aws_apigatewayv2_integration" "lambda" {
++   api_id             = aws_apigatewayv2_api.webhook.id
++   integration_type   = "AWS_PROXY"
++   integration_uri    = aws_lambda_function.incident_bot.invoke_arn
++   payload_format_version = "2.0"
++ }
++
++ resource "aws_apigatewayv2_route" "webhook" {
++   api_id    = aws_apigatewayv2_api.webhook.id
++   route_key = "POST /webhook"
++   target    = "integrations/${aws_apigatewayv2_integration.lambda.id}"
++ }
++
++ resource "aws_apigatewayv2_stage" "default" {
++   api_id      = aws_apigatewayv2_api.webhook.id
++   name        = "$default"
++   auto_deploy = true
++ }
+```
+
+  </div>
+</div>
+
+Notice Kiro used **API Gateway HTTP API** (v2), not the older REST API — because you said so in the Design section. It also set `payload_format_version = "2.0"` which is required for the Lambda event format to match what `handler.py` expects. Accept it.
+
+---
+
+## Step 8 — Add a Hook: Auto-Test on Python Save
+
+You don't want to wait until CI to find out a Python file broke. Add a Kiro Hook that runs pytest every time you save a `.py` file.
+
+Create `.kiro/hooks/auto-test.yaml`:
+
+<div className="ide-window">
+  <div className="ide-window__bar">
+    <span className="ide-window__dot ide-window__dot--red"></span>
+    <span className="ide-window__dot ide-window__dot--yellow"></span>
+    <span className="ide-window__dot ide-window__dot--green"></span>
+    <span className="ide-window__title">.kiro/hooks/auto-test.yaml</span>
+  </div>
+  <div className="ide-window__body ide-window__body--code">
+
+```yaml
+name: Run Tests on Python Save
+description: Runs pytest when any src/ file is saved, reports failures inline
+trigger:
+  type: file_save
+  glob: "src/**/*.py"
+instruction: |
+  The file {{file_path}} was just saved.
+
+  Run the test suite: `pytest tests/ -x -q`
+
+  If tests pass: do nothing, just log "✓ tests passed" to .kiro/test-log.md
+  with the timestamp and file that triggered the run.
+
+  If tests fail: open the relevant test file, find the failing assertion,
+  and add an inline comment above the assertion explaining what the failure
+  means in plain English — so the developer understands the issue immediately
+  without reading pytest output.
+```
+
+  </div>
+</div>
+
+From this point forward, every time Kiro writes a Python file (or you edit one), the tests run automatically. Failures surface as inline code comments — not buried in a terminal.
+
+:::tip Hooks make Kiro a continuous collaborator
+Without this hook, you'd finish all 14 tasks and then run tests — potentially finding 3 bugs at once. With this hook, bugs surface one file at a time as Kiro builds. This is the difference between a batch review and a live review.
+:::
+
+---
+
+## Step 9 — Add Steering: Python & AWS Standards
+
+You notice Kiro used `requests` for the Slack HTTP call. Your team policy is to use `urllib3` directly in Lambdas to avoid adding a dependency. Add a steering file so Kiro follows this rule on every future spec.
+
+Create `.kiro/steering/lambda-standards.md`:
+
+<div className="ide-window">
+  <div className="ide-window__bar">
+    <span className="ide-window__dot ide-window__dot--red"></span>
+    <span className="ide-window__dot ide-window__dot--yellow"></span>
+    <span className="ide-window__dot ide-window__dot--green"></span>
+    <span className="ide-window__title">.kiro/steering/lambda-standards.md</span>
   </div>
   <div className="ide-window__body ide-window__body--code">
 
 ```markdown
-## Tasks
+# Lambda & Python Standards
 
-- [x] 1. Create `modules/cloudwatch-alerts/variables.tf`
-- [x] 2. Create `modules/cloudwatch-alerts/main.tf`
-- [x] 3. Create `modules/cloudwatch-alerts/outputs.tf`
-- [x] 4. Create `modules/cloudwatch-alerts/README.md`
-- [x] 5. Create `examples/cloudwatch-alerts-payments/main.tf`
-- [x] 6. Update `runbooks/payments-api-cpu.md`
-- [x] 7. Update `runbooks/payments-api-5xx.md`
-- [x] 8. Update `runbooks/payments-api-tasks.md`
+## HTTP calls
+- Do NOT use the `requests` library in Lambda functions.
+- Use `urllib.request` (stdlib) or `urllib3` for all HTTP calls.
+- Reason: avoid adding packages that inflate the deployment zip.
+
+## Secrets
+- All secrets come from AWS SSM Parameter Store with WithDecryption=True.
+- Never read secrets from environment variables directly.
+- Cache SSM values at the module level (outside the handler) to avoid
+  fetching on every invocation.
+
+## Error handling
+- Lambda handlers must NEVER raise exceptions.
+- Catch all exceptions at the top level, log with logger.error(..., exc_info=True),
+  and return {"statusCode": 200} so external services stop retrying.
+
+## Logging
+- Use structured logging: logger.info("event", extra={"incident_id": x, "service": y})
+- Do not use print(). Use the logging module.
+
+## Terraform
+- All Lambda functions use python3.12 runtime.
+- All resources are tagged: Environment, Service, ManagedBy=terraform, Team.
+- Use HTTP API (apigatewayv2), not REST API (apigateway), for webhook endpoints.
 ```
 
   </div>
 </div>
 
-All 8 tasks checked. Your file tree now has:
-
-```
-modules/
-  cloudwatch-alerts/
-    main.tf          ← 3 alarms + SNS wiring
-    variables.tf     ← 8 documented input variables
-    outputs.tf       ← alarm_arns, sns_topic_arn
-    README.md        ← usage docs
-examples/
-  cloudwatch-alerts-payments/
-    main.tf          ← real usage example for payments-api
-runbooks/
-  payments-api-cpu.md    ← updated with alarm context
-  payments-api-5xx.md    ← updated with triage steps
-  payments-api-tasks.md  ← updated with ECS recovery steps
-```
+Now reject `src/slack.py` and click **Re-run Task** with the note: *"Use urllib.request instead of requests library"*. Kiro regenerates `slack.py` using only stdlib — matching your team standard.
 
 ---
 
-## Step 8 — Iterate: Reject and Fix a Task
+## Step 10 — Test It Locally
 
-Let's say when you reviewed Task 6 (`payments-api-cpu.md`), Kiro generated a generic runbook but your team requires a specific **Escalation Matrix** section. Reject it:
-
-1. Click **Reject** on the diff
-2. Kiro re-opens Task 6 with a note field
-3. Type: `"Add an Escalation Matrix section: L1 = on-call SRE, L2 = payments team lead, L3 = platform VP"`
-4. Click **Re-run Task**
-
-Kiro re-generates only that task with your note as additional context. The rest of your accepted tasks are untouched.
-
-<div className="tutorial-callout">
-  <div className="tutorial-callout__icon">💡</div>
-  <div>
-    <strong>This is the iteration loop.</strong> Write spec → Run → Review → Reject with notes → Re-run.
-    Most SREs do 1–2 rejection cycles per spec before everything is exactly right.
-  </div>
-</div>
-
----
-
-## Step 9 — Add Steering (Optional but Recommended)
-
-You notice Kiro used `snake_case` for alarm names, but your team standard is `kebab-case`. Instead of rejecting and re-running, add a **steering file** so every future spec follows your convention automatically.
-
-Create `.kiro/steering/terraform-conventions.md`:
-
-```markdown
-# Terraform Conventions
-
-- All resource names use kebab-case: `payments-api-cpu-high`, not `payments_api_cpu_high`
-- Every CloudWatch alarm description must include a runbook link in the format:
-  `Runbook: https://wiki.internal/runbooks/<service>-<alarm>`
-- Use `treat_missing_data = "notBreaching"` on all rate-based alarms
-- Tag all resources with: Environment, Service, Team, ManagedBy=terraform
-```
-
-From now on, every spec Kiro runs in this repo will follow these rules — no reminder needed.
-
----
-
-## Step 10 — Commit and Deploy
-
-Your changes are on disk, unmodified from what you reviewed. Commit normally:
+All 14 tasks are accepted. Before pushing, run the tests:
 
 ```bash
-git add modules/cloudwatch-alerts/ examples/ runbooks/
-git commit -m "feat: add CloudWatch alarms for payments-api via Kiro spec"
+pip install -r requirements.txt
+pytest tests/ -v
+```
+
+Expected output:
+
+<div className="ide-window">
+  <div className="ide-window__bar">
+    <span className="ide-window__dot ide-window__dot--red"></span>
+    <span className="ide-window__dot ide-window__dot--yellow"></span>
+    <span className="ide-window__dot ide-window__dot--green"></span>
+    <span className="ide-window__title">Terminal</span>
+  </div>
+  <div className="ide-window__body">
+    <div className="agent-log">
+      <div className="agent-log__line agent-log__line--done">
+        <span className="agent-log__status">✓</span>
+        <span>tests/test_handler.py::test_trigger_posts_to_slack <strong style={{color:'#22c55e'}}>PASSED</strong></span>
+      </div>
+      <div className="agent-log__line agent-log__line--done">
+        <span className="agent-log__status">✓</span>
+        <span>tests/test_handler.py::test_resolve_posts_resolved_message <strong style={{color:'#22c55e'}}>PASSED</strong></span>
+      </div>
+      <div className="agent-log__line agent-log__line--done">
+        <span className="agent-log__status">✓</span>
+        <span>tests/test_handler.py::test_invalid_signature_returns_200 <strong style={{color:'#22c55e'}}>PASSED</strong></span>
+      </div>
+      <div className="agent-log__line agent-log__line--done">
+        <span className="agent-log__status">✓</span>
+        <span>tests/test_slack.py::test_p1_uses_red_color <strong style={{color:'#22c55e'}}>PASSED</strong></span>
+      </div>
+      <div className="agent-log__line agent-log__line--done">
+        <span className="agent-log__status">✓</span>
+        <span>tests/test_slack.py::test_block_kit_has_runbook_link <strong style={{color:'#22c55e'}}>PASSED</strong></span>
+      </div>
+      <div className="agent-log__line" style={{marginTop: '0.5rem', fontWeight: 600, color: '#22c55e'}}>
+        <span className="agent-log__status">✓</span>
+        <span>5 passed in 0.42s</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+All green. Commit and push:
+
+```bash
+git add .
+git commit -m "feat: incident-slack-bot via Kiro spec"
 git push origin main
 ```
 
-Your CI pipeline picks it up, runs `terraform plan`, and your team reviews the plan output before apply — exactly the same review process as hand-written Terraform.
+GitHub Actions picks it up, runs pytest, then runs `terraform apply`. After ~2 minutes, the output shows:
+
+```
+Outputs:
+webhook_url = "https://abc123.execute-api.us-east-1.amazonaws.com/webhook"
+```
+
+---
+
+## Step 11 — Wire Up PagerDuty
+
+In PagerDuty:
+1. Go to **Integrations → Generic Webhooks (V3)**
+2. Add Webhook URL: paste the `webhook_url` from Terraform output
+3. Events: check **Incident Triggered** and **Incident Resolved**
+4. Save
+
+Trigger a test incident in PagerDuty. Within 3 seconds, `#incidents` in Slack shows:
+
+<div className="ide-window">
+  <div className="ide-window__bar">
+    <span className="ide-window__dot ide-window__dot--red"></span>
+    <span className="ide-window__dot ide-window__dot--yellow"></span>
+    <span className="ide-window__dot ide-window__dot--green"></span>
+    <span className="ide-window__title">#incidents — Slack</span>
+  </div>
+  <div className="ide-window__body">
+    <div className="slack-message">
+      <div className="slack-message__bar slack-message__bar--red"></div>
+      <div className="slack-message__content">
+        <div className="slack-message__header">🚨 P2 — payments-api high error rate</div>
+        <div className="slack-message__fields">
+          <div><strong>Service:</strong> payments-api</div>
+          <div><strong>On-call:</strong> Alex Chen</div>
+          <div><strong>Runbook:</strong> <span style={{color:'#7c3aed'}}>Open runbook ↗</span></div>
+          <div><strong>Incident ID:</strong> P123ABC</div>
+        </div>
+        <div className="slack-message__button">View in PagerDuty</div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <div className="tutorial-outcome">
   <div className="tutorial-outcome__icon">🎉</div>
   <div>
-    <strong>Done.</strong> You wrote a spec in ~5 minutes and Kiro produced production-ready Terraform and runbooks.
-    The payments-api team will get paged next time CPU spikes — before customers notice.
+    <strong>Shipped.</strong> You went from an empty folder to a production Lambda bot with tests,
+    Terraform, and CI/CD — without writing a single file by hand.
+    The spec took 5 minutes to write. Kiro did the rest in under 10 minutes of agent execution.
   </div>
 </div>
 
 ---
 
-## What You Learned
+## What Made This Work
 
 <div className="kiro-pillars" style={{marginTop: '1rem'}}>
-  <div className="kiro-pillar" style={{cursor: 'default'}}>
+  <div className="kiro-pillar" style={{cursor:'default'}}>
     <div className="kiro-pillar__icon">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="4" y="2" width="14" height="18" rx="2" stroke="currentColor" strokeWidth="2"/><line x1="8" y1="8" x2="14" y2="8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/><line x1="8" y1="12" x2="14" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
     </div>
     <div className="kiro-pillar__content">
-      <div className="kiro-pillar__title">Specs drive everything</div>
-      <div className="kiro-pillar__desc">Requirements + Design + Tasks = a complete, reviewable work order for Kiro.</div>
+      <div className="kiro-pillar__title">Spec captured the full picture</div>
+      <div className="kiro-pillar__desc">Requirements covered <em>why</em> (no manual copy-paste) and constraints (SSM, never crash). Design specified the exact file layout, API choices, and patterns — so Kiro had no ambiguity to resolve on its own.</div>
     </div>
   </div>
-  <div className="kiro-pillar" style={{cursor: 'default'}}>
+  <div className="kiro-pillar" style={{cursor:'default'}}>
     <div className="kiro-pillar__icon">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2"/><polyline points="8,12 11,15 16,9" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><polygon points="13,2 3,14 12,14 11,22 21,10 12,10" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/></svg>
     </div>
     <div className="kiro-pillar__content">
-      <div className="kiro-pillar__title">You review every diff</div>
-      <div className="kiro-pillar__desc">Nothing writes to disk without your explicit accept. Reject with a note to iterate.</div>
+      <div className="kiro-pillar__title">Hook gave instant feedback</div>
+      <div className="kiro-pillar__desc">The auto-test hook caught issues file-by-file as Kiro built, not as a batch at the end. Bugs surfaced with context, not as a wall of pytest errors.</div>
     </div>
   </div>
-  <div className="kiro-pillar" style={{cursor: 'default'}}>
+  <div className="kiro-pillar" style={{cursor:'default'}}>
     <div className="kiro-pillar__icon">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/><circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2"/><line x1="12" y1="2" x2="12" y2="9" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/><line x1="12" y1="15" x2="12" y2="22" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
     </div>
     <div className="kiro-pillar__content">
-      <div className="kiro-pillar__title">Steering carries your conventions</div>
-      <div className="kiro-pillar__desc">Write your team rules once in <code>.kiro/steering/</code>. Kiro follows them in every future spec.</div>
+      <div className="kiro-pillar__title">Steering enforced team standards</div>
+      <div className="kiro-pillar__desc">One rejected task + a steering file means every future Lambda in this repo will use <code>urllib.request</code>, cache SSM, and tag resources correctly — automatically.</div>
     </div>
   </div>
 </div>
@@ -521,7 +767,7 @@ Your CI pipeline picks it up, runs `terraform plan`, and your team reviews the p
 
 ## Next Steps
 
-- **[Specs deep dive →](specs)** — Learn all spec patterns: iterating mid-run, splitting specs, referencing existing code
-- **[Agent Hooks →](agent-hooks)** — Auto-trigger a spec when a new service folder is created
-- **[Steering & Skills →](steering-skills)** — Add team-wide conventions and reusable slash-command workflows
-- **[MCP →](mcp)** — Connect Kiro to live AWS so it can read your actual CloudWatch metrics while writing alarms
+- **Extend this bot** — Add a `snooze` action button in the Slack message that calls back to PagerDuty's API to acknowledge the incident. Write a new spec: `incident-slack-bot-snooze`.
+- **[Agent Hooks →](agent-hooks)** — Explore all hook trigger types and more automation patterns
+- **[Steering & Skills →](steering-skills)** — Turn your Lambda standards into a reusable skill your team can invoke with `/deploy-lambda`
+- **[MCP →](mcp)** — Connect Kiro to live AWS so it can query CloudWatch metrics and paste them directly into incident messages

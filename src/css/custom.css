@@ -1574,6 +1574,119 @@ code {
   color: #bfdbfe;
 }
 
+/* ── Review checklist ────────────────────────────────────────────── */
+.review-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin: 1.1rem 0;
+}
+
+.review-checklist__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  font-size: 0.88rem;
+  padding: 0.5rem 0.85rem;
+  border-radius: 8px;
+  color: #1f2937;
+}
+
+[data-theme='dark'] .review-checklist__item {
+  color: #e9d5ff;
+}
+
+.review-checklist__item--good {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+}
+
+.review-checklist__item--warn {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+}
+
+[data-theme='dark'] .review-checklist__item--good {
+  background: #052e16;
+  border-color: #166534;
+}
+
+[data-theme='dark'] .review-checklist__item--warn {
+  background: #1c1404;
+  border-color: #854d0e;
+}
+
+.review-checklist__item span:first-child {
+  flex-shrink: 0;
+  font-size: 1rem;
+}
+
+/* ── Slack message mockup ────────────────────────────────────────── */
+.slack-message {
+  display: flex;
+  gap: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  max-width: 480px;
+}
+
+[data-theme='dark'] .slack-message {
+  border-color: #2d2a5e;
+}
+
+.slack-message__bar {
+  width: 4px;
+  flex-shrink: 0;
+}
+
+.slack-message__bar--red { background: #FF0000; }
+
+.slack-message__content {
+  padding: 0.9rem 1.1rem;
+  background: #fff;
+  flex: 1;
+}
+
+[data-theme='dark'] .slack-message__content {
+  background: #1a1830;
+}
+
+.slack-message__header {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 0.6rem;
+}
+
+[data-theme='dark'] .slack-message__header {
+  color: #f3f4f6;
+}
+
+.slack-message__fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.35rem 1.5rem;
+  font-size: 0.83rem;
+  color: #374151;
+  margin-bottom: 0.75rem;
+}
+
+[data-theme='dark'] .slack-message__fields {
+  color: #c4b5fd;
+}
+
+.slack-message__button {
+  display: inline-block;
+  background: #FF0000;
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.3rem 0.85rem;
+  border-radius: 4px;
+  cursor: default;
+}
+
 /* ─── Comparison verdict rows ────────────────────────────────────── */
 
 .verdict-row {
