@@ -98,22 +98,19 @@ You can still follow this tutorial. Kiro will write all the code and Terraform. 
 
 Open Kiro's command palette: **`Cmd/Ctrl + Shift + P`** → type **`Kiro: New Spec`** → name it `incident-slack-bot`.
 
-Kiro creates `.kiro/specs/incident-slack-bot.md` and opens it.
+![Creating a new spec in Kiro — the spec editor opens with Requirements, Design, and Tasks sections ready to fill in](/img/tutorial/specs-start.gif)
+
+Kiro creates `.kiro/specs/incident-slack-bot.md` and opens it with the three sections pre-structured.
 
 ---
 
 ## Step 2 — Write the Requirements
 
-Copy this into the Requirements section of your spec:
+The Kiro spec editor opens with a Requirements section ready to fill in. This is what it looks like in the IDE:
 
-<div className="ide-window">
-  <div className="ide-window__bar">
-    <span className="ide-window__dot ide-window__dot--red"></span>
-    <span className="ide-window__dot ide-window__dot--yellow"></span>
-    <span className="ide-window__dot ide-window__dot--green"></span>
-    <span className="ide-window__title">.kiro/specs/incident-slack-bot.md</span>
-  </div>
-  <div className="ide-window__body ide-window__body--code">
+![Kiro spec editor showing the Requirements section — write user stories and constraints here](/img/tutorial/specs-requirements.png)
+
+Copy the following into the Requirements section of your spec:
 
 ```markdown
 ## Requirements
@@ -141,9 +138,6 @@ Copy this into the Requirements section of your spec:
   (return HTTP 200 to PagerDuty even on soft errors so it stops retrying).
 ```
 
-  </div>
-</div>
-
 :::info Why mention "never hardcoded" in Requirements?
 Kiro reads your Requirements to understand constraints, not just features.
 Saying "secrets must come from SSM" tells Kiro to use `boto3` SSM calls
@@ -155,16 +149,11 @@ otherwise guess at.
 
 ## Step 3 — Write the Design
 
-Add this Design section below Requirements:
+The Design section in Kiro lives directly below Requirements in the same spec file. Here's what it looks like in the IDE:
 
-<div className="ide-window">
-  <div className="ide-window__bar">
-    <span className="ide-window__dot ide-window__dot--red"></span>
-    <span className="ide-window__dot ide-window__dot--yellow"></span>
-    <span className="ide-window__dot ide-window__dot--green"></span>
-    <span className="ide-window__title">.kiro/specs/incident-slack-bot.md</span>
-  </div>
-  <div className="ide-window__body ide-window__body--code">
+![Kiro spec editor showing the Design section — describe your architecture, file layout, and constraints here](/img/tutorial/specs-design.png)
+
+Add this Design section below Requirements:
 
 ```markdown
 ## Design
@@ -198,23 +187,15 @@ Add this Design section below Requirements:
 - Terraform state in S3 backend (bucket name from GitHub secret TF_STATE_BUCKET)
 ```
 
-  </div>
-</div>
-
 ---
 
 ## Step 4 — Generate Tasks
 
-Click **Generate Tasks** in the Kiro sidebar. Kiro reads both sections and produces:
+Click **Generate Tasks** in the Kiro sidebar. Kiro reads both sections and produces a prioritized task list automatically:
 
-<div className="ide-window">
-  <div className="ide-window__bar">
-    <span className="ide-window__dot ide-window__dot--red"></span>
-    <span className="ide-window__dot ide-window__dot--yellow"></span>
-    <span className="ide-window__dot ide-window__dot--green"></span>
-    <span className="ide-window__title">Generated Tasks</span>
-  </div>
-  <div className="ide-window__body ide-window__body--code">
+![Kiro generates the task list from your Requirements and Design — each task is a discrete, reviewable unit of work](/img/tutorial/specs-tasks.png)
+
+For this project, the generated task list looks like this:
 
 ```markdown
 ## Tasks
@@ -235,9 +216,6 @@ Click **Generate Tasks** in the Kiro sidebar. Kiro reads both sections and produ
 - [ ] 14. Create `.github/workflows/deploy.yml` — test + terraform apply pipeline
 ```
 
-  </div>
-</div>
-
 14 tasks across Python, tests, Terraform, and CI/CD — generated in about 10 seconds.
 
 Scan the list. If a task is missing (e.g., you want a `Makefile`), add it now. When ready, click **Run Spec**.
@@ -246,54 +224,11 @@ Scan the list. If a task is missing (e.g., you want a `Makefile`), add it now. W
 
 ## Step 5 — Watch the Agent Build It
 
-The Kiro Agent panel shows live progress. Each task takes 20–40 seconds:
+The Kiro Agent panel shows live progress. Each task takes 20–40 seconds. Here's what task execution looks like in the real IDE:
 
-<div className="ide-window">
-  <div className="ide-window__bar">
-    <span className="ide-window__dot ide-window__dot--red"></span>
-    <span className="ide-window__dot ide-window__dot--yellow"></span>
-    <span className="ide-window__dot ide-window__dot--green"></span>
-    <span className="ide-window__title">Kiro Agent — incident-slack-bot</span>
-  </div>
-  <div className="ide-window__body">
-    <div className="agent-log">
-      <div className="agent-log__line agent-log__line--done">
-        <span className="agent-log__status">✓</span>
-        <span>Task 1 — Created <code>requirements.txt</code></span>
-      </div>
-      <div className="agent-log__line agent-log__line--done">
-        <span className="agent-log__status">✓</span>
-        <span>Task 2 — Created <code>src/pagerduty.py</code> with HMAC validation</span>
-      </div>
-      <div className="agent-log__line agent-log__line--done">
-        <span className="agent-log__status">✓</span>
-        <span>Task 3–4 — Created <code>src/runbooks.py</code> + <code>runbooks.yaml</code></span>
-      </div>
-      <div className="agent-log__line agent-log__line--done">
-        <span className="agent-log__status">✓</span>
-        <span>Task 5 — Created <code>src/slack.py</code> with Block Kit builder</span>
-      </div>
-      <div className="agent-log__line agent-log__line--active">
-        <span className="agent-log__status agent-log__status--spin">◌</span>
-        <span>Task 6 — Writing <code>src/handler.py</code> — Lambda entry point...</span>
-      </div>
-      <div className="agent-log__line agent-log__line--pending">
-        <span className="agent-log__status">○</span>
-        <span>Tasks 7–9 — Tests + fixtures</span>
-      </div>
-      <div className="agent-log__line agent-log__line--pending">
-        <span className="agent-log__status">○</span>
-        <span>Tasks 10–13 — Terraform</span>
-      </div>
-      <div className="agent-log__line agent-log__line--pending">
-        <span className="agent-log__status">○</span>
-        <span>Task 14 — GitHub Actions</span>
-      </div>
-    </div>
-  </div>
-</div>
+![Kiro agent executing spec tasks in real-time — each task shows live status as files are written and checked off](/img/tutorial/spec-task.gif)
 
-You don't touch the keyboard. Kiro is reading your spec, reasoning about each file's dependencies, and generating in order (it writes `pagerduty.py` before `handler.py` because `handler.py` imports it).
+You don't touch the keyboard. Kiro reads your spec, reasons about each file's dependencies, and generates in order — it writes `pagerduty.py` before `handler.py` because `handler.py` imports it.
 
 ---
 
@@ -538,15 +473,6 @@ You don't want to wait until CI to find out a Python file broke. Add a Kiro Hook
 
 Create `.kiro/hooks/auto-test.yaml`:
 
-<div className="ide-window">
-  <div className="ide-window__bar">
-    <span className="ide-window__dot ide-window__dot--red"></span>
-    <span className="ide-window__dot ide-window__dot--yellow"></span>
-    <span className="ide-window__dot ide-window__dot--green"></span>
-    <span className="ide-window__title">.kiro/hooks/auto-test.yaml</span>
-  </div>
-  <div className="ide-window__body ide-window__body--code">
-
 ```yaml
 name: Run Tests on Python Save
 description: Runs pytest when any src/ file is saved, reports failures inline
@@ -567,8 +493,9 @@ instruction: |
   without reading pytest output.
 ```
 
-  </div>
-</div>
+After saving the file, the hook appears in the Kiro Hooks panel:
+
+![Kiro hooks panel showing the auto-test hook — hooks are listed with their trigger type and last run status](/img/tutorial/hooks.png)
 
 From this point forward, every time Kiro writes a Python file (or you edit one), the tests run automatically. Failures surface as inline code comments — not buried in a terminal.
 
