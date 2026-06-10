@@ -1076,6 +1076,74 @@ code {
   color: #a78bfa;
 }
 
+/* ─── Spec why (with vs without) ─────────────────────────────────── */
+
+.spec-why {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin: 1rem 0 1.75rem;
+}
+
+@media (max-width: 680px) {
+  .spec-why { grid-template-columns: 1fr; }
+}
+
+.spec-why__col {
+  padding: 1.1rem 1.25rem;
+  border-radius: 12px;
+  border: 1.5px solid;
+}
+
+.spec-why__col--bad {
+  border-color: #fecaca;
+  background: #fff7f7;
+}
+
+.spec-why__col--good {
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+}
+
+[data-theme='dark'] .spec-why__col--bad {
+  border-color: #7f1d1d;
+  background: #1c0a0a;
+}
+
+[data-theme='dark'] .spec-why__col--good {
+  border-color: #14532d;
+  background: #052e16;
+}
+
+.spec-why__label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  margin-bottom: 0.65rem;
+}
+
+.spec-why__col--bad  .spec-why__label { color: #dc2626; }
+.spec-why__col--good .spec-why__label { color: #16a34a; }
+
+[data-theme='dark'] .spec-why__col--bad  .spec-why__label { color: #fca5a5; }
+[data-theme='dark'] .spec-why__col--good .spec-why__label { color: #86efac; }
+
+.spec-why__col ul {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.spec-why__col li {
+  font-size: 0.88rem;
+  color: #374151;
+  margin-bottom: 0.35rem;
+  line-height: 1.5;
+}
+
+[data-theme='dark'] .spec-why__col--bad  li { color: #fecaca; }
+[data-theme='dark'] .spec-why__col--good li { color: #d1fae5; }
+
 /* ─── Hook trigger cards ──────────────────────────────────────────── */
 
 .trigger-grid {
