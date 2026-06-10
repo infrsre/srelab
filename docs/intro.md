@@ -237,10 +237,6 @@ Kiro is less "ask and paste" and more **"delegate and review."**
 
 If you are comparing Kiro to Claude Code or other AI tools, see the [Kiro vs Claude Code](./comparison) page.
 
-## Prerequisites
+## Get Kiro
 
-- Kiro installed ([download from kiro.dev](https://kiro.dev))
-- A project repository open in Kiro (any language)
-- Basic familiarity with your team's infrastructure stack (AWS, Kubernetes, Terraform, etc.)
-
-No prior AI tooling experience is required.
+Download and install Kiro from the official site: [kiro.dev](https://kiro.dev)
