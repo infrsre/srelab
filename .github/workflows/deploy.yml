@@ -10,7 +10,6 @@ permissions:
   contents: read
   pages: write
   id-token: write
-  administration: write
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -32,8 +31,6 @@ jobs:
 
       - uses: actions/configure-pages@v5
         id: pages
-        with:
-          enablement: true
 
       - name: Build
         run: npm run build
