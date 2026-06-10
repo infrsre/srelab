@@ -12,6 +12,39 @@ const config = {
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
 
+  headTags: [
+    {
+      // CSP via meta tag — the only option on GitHub Pages (no custom HTTP headers).
+      // 'unsafe-inline' is required for both script-src and style-src because
+      // Docusaurus injects inline React hydration scripts and inline styles at build time.
+      // frame-ancestors is intentionally omitted: browsers ignore it in meta tags —
+      // it only works as an HTTP header (covered by nginx.conf for Docker/AWS deployments).
+      tagName: 'meta',
+      attributes: {
+        'http-equiv': 'Content-Security-Policy',
+        content: [
+          "default-src 'self'",
+          "script-src 'self' 'unsafe-inline'",
+          "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+          "font-src 'self' https://fonts.gstatic.com",
+          "img-src 'self' data:",
+          "connect-src 'self'",
+          "object-src 'none'",
+          "base-uri 'self'",
+          "form-action 'self'",
+        ].join('; '),
+      },
+    },
+    {
+      // Referrer-Policy can be set via meta tag (unlike X-Frame-Options / X-Content-Type-Options).
+      tagName: 'meta',
+      attributes: {
+        name: 'referrer',
+        content: 'strict-origin-when-cross-origin',
+      },
+    },
+  ],
+
   i18n: {
     defaultLocale: 'en',
     locales: ['en'],
