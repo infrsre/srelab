@@ -16,6 +16,7 @@
   --ifm-background-surface-color: #ffffff;
 
   /* typography */
+  --ifm-font-color-base: #111827;
   --ifm-font-family-base: 'Inter', system-ui, -apple-system, sans-serif;
   --ifm-font-family-monospace: 'JetBrains Mono', 'Fira Code', monospace;
   --ifm-font-size-base: 16px;
@@ -319,7 +320,7 @@ code {
 /* ── TOC (right sidebar) ──────────────────────────────────────────────────── */
 .table-of-contents__link {
   font-size: 0.82rem;
-  color: #6b7280;
+  color: #374151;
   transition: color 0.15s ease;
 }
 
@@ -475,7 +476,7 @@ code {
 
 .kiro-hero__sub {
   font-size: 1.05rem;
-  color: #4b5563;
+  color: #1f2937;
   line-height: 1.7;
   max-width: 580px;
   margin-bottom: 1.75rem;
@@ -640,7 +641,7 @@ code {
 
 .kiro-flow-step p {
   font-size: 0.76rem;
-  color: #6b7280;
+  color: #374151;
   line-height: 1.45;
   margin: 0;
 }
@@ -773,7 +774,7 @@ code {
 
 .kiro-pillar__desc {
   font-size: 0.86rem;
-  color: #6b7280;
+  color: #374151;
   line-height: 1.5;
 }
 
@@ -837,7 +838,7 @@ code {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #9ca3af;
+  color: #6b7280;
   margin-bottom: 0.9rem;
 }
 
@@ -877,7 +878,7 @@ code {
 [data-theme='dark'] .kiro-compare__node {
   background: #1e1c2e;
   border-color: #374151;
-  color: #9ca3af;
+  color: #6b7280;
 }
 
 [data-theme='dark'] .kiro-compare__col--active .kiro-compare__node {
@@ -887,7 +888,7 @@ code {
 }
 
 .kiro-compare__sep {
-  color: #9ca3af;
+  color: #6b7280;
   font-size: 1rem;
 }
 
@@ -897,7 +898,7 @@ code {
 
 .kiro-compare__note {
   font-size: 0.82rem;
-  color: #6b7280;
+  color: #374151;
   line-height: 1.5;
   margin: 0;
 }
@@ -985,7 +986,7 @@ code {
 
 .page-intro__desc {
   font-size: 0.95rem;
-  color: #4b5563;
+  color: #1f2937;
   line-height: 1.6;
   margin: 0 0 0.65rem;
 }
@@ -1066,7 +1067,7 @@ code {
 
 .spec-part p {
   font-size: 0.82rem;
-  color: #6b7280;
+  color: #374151;
   line-height: 1.5;
   margin: 0;
 }
@@ -1121,7 +1122,7 @@ code {
 
 .trigger-item__desc {
   font-size: 0.82rem;
-  color: #6b7280;
+  color: #374151;
   line-height: 1.4;
   margin: 0;
 }
@@ -1195,12 +1196,12 @@ code {
 
 .mcp-quick-card__cap {
   font-size: 0.73rem;
-  color: #9ca3af;
+  color: #6b7280;
   line-height: 1.4;
 }
 
 [data-theme='dark'] .mcp-quick-card__cap {
-  color: #6b7280;
+  color: #374151;
 }
 
 /* ─── Comparison verdict rows ────────────────────────────────────── */
@@ -1226,7 +1227,7 @@ code {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.07em;
-  color: #9ca3af;
+  color: #6b7280;
   flex-shrink: 0;
 }
 
@@ -1276,7 +1277,7 @@ code {
 
 .verdict-row p {
   font-size: 0.85rem;
-  color: #6b7280;
+  color: #374151;
   margin: 0;
 }
 
